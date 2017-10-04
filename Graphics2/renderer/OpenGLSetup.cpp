@@ -26,6 +26,9 @@ void OpenGLSetup::initFullscreen(const char* title, GLFWmonitor* monitor) {
 		std::cerr << "Could not initialise glfw" << std::endl;
 		exit(1);
 	}
+	if (monitor == nullptr) {
+		monitor = glfwGetPrimaryMonitor();
+	}
 	//Google says this is how you enter borderless windowed mode
 	const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 	glfwWindowHint(GLFW_RED_BITS, mode->redBits);
