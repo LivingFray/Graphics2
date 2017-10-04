@@ -3,6 +3,9 @@
 
 
 SceneObject::SceneObject() {
+	//TODO: Initialise
+	localMat = glm::mat4(1);
+	globalMat = glm::mat4(1);
 }
 
 SceneObject::SceneObject(SceneObject & other) {
@@ -25,10 +28,6 @@ bool SceneObject::setParent(SceneObject* obj) {
 	return true;
 }
 
-SceneObject * SceneObject::getParent() {
-	return parent;
-}
-
 bool SceneObject::hasChild(SceneObject* child) {
 	for (SceneObject* s : this->children) {
 		if (s == child) {
@@ -49,3 +48,30 @@ bool SceneObject::hasDescendent(SceneObject* child) {
 	}
 	return false;
 }
+
+glm::mat4 SceneObject::getLocalMatrix() {
+	return localMat;
+}
+
+glm::mat4 SceneObject::getGlobalMatrix() {
+	return globalMat;
+}
+
+void SceneObject::setLocalMatrix(glm::mat4 m) {
+	localMat = m;
+	//Update global matrix for hierarchy
+	updateMatrix();
+}
+
+void SceneObject::updateMatrix() {
+	//Technically the scene can be transformed, and it lacks a parent
+	if (this->parent) {
+		//Apply local transformation, then parent, then parent's parent, etc
+		this->globalMat = this->parent->getGlobalMatrix() * localMat;
+	}
+	//Update child matrices
+	for (SceneObject* o : this->getChildren()) {
+		o->updateMatrix();
+	}
+}
+
