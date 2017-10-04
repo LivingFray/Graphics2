@@ -6,6 +6,7 @@ scene and local objects like spaceships with another)
 */
 #include <vector>
 #include "SceneObject.h"
+#include "Renderable.h"
 
 using std::vector;
 
@@ -16,7 +17,7 @@ public:
 
 private:
 	//Special rendering list
-	vector<SceneObject*> renderable;
+	vector<Renderable*> renderable;
 	//Separate variable for skybox?
 	//Make skybox related to camera?
 };

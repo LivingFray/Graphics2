@@ -24,12 +24,24 @@
     <ClCompile Include="renderer\SceneObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\Renderable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\OpenGLSetup.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="renderer\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="renderer\SceneObject.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\Renderable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\OpenGLSetup.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
