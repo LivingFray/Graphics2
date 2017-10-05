@@ -25,6 +25,8 @@ public:
 	bool setParent(SceneObject* obj);
 	//Gets the parent of the object
 	SceneObject* getParent() { return parent; };
+	//Gets the scene the object occupies
+	Scene* getScene() { return scene; };
 	//Gets the children of the object
 	const vector<SceneObject*>& getChildren() const { return children; };
 	//Checks if the child is a direct child of the object
@@ -47,6 +49,8 @@ public:
 	glm::vec3 getScale() const { return scale; };
 	//Gets the rotation of the object
 	glm::quat getRotation() const { return rot; };
+protected:
+	virtual void setScene(Scene* s);
 private:
 	Scene* scene;
 	SceneObject* parent;
@@ -57,6 +61,5 @@ private:
 	glm::mat4 localMat;
 	glm::mat4 globalMat;
 	void updateMatrix();
-	void setScene(Scene* s);
 };
 

@@ -4,12 +4,17 @@
 #include "glm/gtc/quaternion.hpp"
 
 SceneObject::SceneObject() {
-	//TODO: Initialise
 	localMat = glm::mat4(1);
 	globalMat = glm::mat4(1);
+	parent = nullptr;
+	scene = nullptr;
+	pos = glm::vec3(0.0);
+	scale = glm::vec3(1.0);
+	rot = glm::quat();
+
 }
 
-SceneObject::SceneObject(SceneObject & other) {
+SceneObject::SceneObject(SceneObject& other) {
 	//TODO: Copy
 }
 
@@ -38,6 +43,8 @@ bool SceneObject::setParent(SceneObject* obj) {
 	if (obj) {
 		obj->children.push_back(this);
 	}
+	//Ensure correct scene
+	setScene(obj->scene);
 	return true;
 }
 
@@ -72,22 +79,26 @@ glm::mat4 SceneObject::getGlobalMatrix() {
 
 void SceneObject::setPosition(glm::vec3 pos) {
 	this->pos = pos;
+	//Apply transformations in order: rotation, scale, translation
+	localMat = glm::translate(glm::mat4(1.0f), pos) * glm::scale(glm::mat4(1.0f), scale) * glm::mat4_cast(rot);
 	updateMatrix();
 }
 
 void SceneObject::setScale(glm::vec3 scale) {
 	this->scale = scale;
+	//Apply transformations in order: rotation, scale, translation
+	localMat = glm::translate(glm::mat4(1.0f), pos) * glm::scale(glm::mat4(1.0f), scale) * glm::mat4_cast(rot);
 	updateMatrix();
 }
 
 void SceneObject::setRotation(glm::quat rot) {
 	this->rot = rot;
+	//Apply transformations in order: rotation, scale, translation
+	localMat = glm::translate(glm::mat4(1.0f), pos) * glm::scale(glm::mat4(1.0f), scale) * glm::mat4_cast(rot);
 	updateMatrix();
 }
 
 void SceneObject::updateMatrix() {
-	//Apply transformations in order: rotation, scale, translation
-	localMat = glm::translate(glm::scale(glm::mat4_cast(rot), scale), pos);
 	//Technically the scene can be transformed, and it lacks a parent
 	if (this->parent) {
 		//Apply local transformation, then parent, then parent's parent, etc
@@ -100,7 +111,7 @@ void SceneObject::updateMatrix() {
 }
 
 void SceneObject::setScene(Scene* s) {
-	this->scene = scene;
+	this->scene = s;
 	for (SceneObject* c : children) {
 		c->setScene(s);
 	}

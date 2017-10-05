@@ -22,7 +22,7 @@ public:
 	// Gets the near clipping distance of the camera
 	GLfloat getNear() const { return near; };
 	// Sets the far clipping distance of the camera
-	void setFar(GLfloat near);
+	void setFar(GLfloat far);
 	// Gets the far clipping distance of the camera
 	GLfloat getFar() const { return far; };
 	// Sets the width of the camera
@@ -37,6 +37,10 @@ public:
 	glm::mat4 getProjection();
 	// Gets the view matrix associated with the camera
 	glm::mat4 getView() const;
+	// Whether the camera clears the scene before drawing
+	bool clearOnDraw;
+	// Renders the scene from the perspective of this camera
+	void render();
 private:
 	GLfloat width;
 	GLfloat height;

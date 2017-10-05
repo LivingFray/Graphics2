@@ -69,6 +69,7 @@ void OpenGLSetup::sharedInit() {
 		glfwTerminate();
 		exit(1);
 	}
+	glCullFace(GL_BACK);
 	//Useful debug info about the graphics card in use
 	//(This is where I learnt I was using an integrated chip by default)
 	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl
