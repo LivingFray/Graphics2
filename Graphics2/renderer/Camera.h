@@ -1,0 +1,49 @@
+#pragma once
+/*
+Cameras draw the scenes
+*/
+#include "SceneObject.h"
+#include "OpenGLSetup.h"
+class Camera :
+	public SceneObject {
+public:
+	Camera();
+	~Camera();
+	// Sets the field of view of the camera
+	void setFOV(GLfloat fov);
+	// Gets the field of view of the camera
+	GLfloat getFOV() const { return fov; };
+	// Sets whether the camera uses perspective or orthographic projection
+	void setPerspective(bool perspective);
+	// Gets whether the camera uses perspective projection
+	bool getPerspective() const { return perspective; };
+	// Sets the near clipping distance of the camera
+	void setNear(GLfloat near);
+	// Gets the near clipping distance of the camera
+	GLfloat getNear() const { return near; };
+	// Sets the far clipping distance of the camera
+	void setFar(GLfloat near);
+	// Gets the far clipping distance of the camera
+	GLfloat getFar() const { return far; };
+	// Sets the width of the camera
+	void setWidth(GLfloat width);
+	// Gets the width of the camera
+	GLfloat getWidth() const { return width; };
+	// Sets the width of the camera
+	void setHeight(GLfloat height);
+	// Gets the width of the camera
+	GLfloat getHeight() const { return height; };
+	// Gets the projection matrix associated with the camera
+	glm::mat4 getProjection();
+	// Gets the view matrix associated with the camera
+	glm::mat4 getView() const;
+private:
+	GLfloat width;
+	GLfloat height;
+	GLfloat fov;
+	GLfloat near;
+	GLfloat far;
+	bool perspective;
+	glm::mat4 proj;
+	bool updateFlag;
+};

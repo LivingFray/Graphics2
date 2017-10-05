@@ -1,7 +1,7 @@
 #include "SceneObject.h"
 #include <iostream>
-#include "glm/gtx/transform.hpp"
-#include "glm/gtx/quaternion.hpp"
+#include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/quaternion.hpp"
 
 SceneObject::SceneObject() {
 	//TODO: Initialise
@@ -16,6 +16,15 @@ SceneObject::SceneObject(SceneObject & other) {
 
 SceneObject::~SceneObject() {
 	//TODO: Delete
+}
+
+bool SceneObject::setParent(Scene* obj) {
+	if (!obj) {
+		return false;
+	}
+	this->parent = (SceneObject*)obj;
+	setScene(obj);
+	return true;
 }
 
 
@@ -78,7 +87,7 @@ void SceneObject::setRotation(glm::quat rot) {
 
 void SceneObject::updateMatrix() {
 	//Apply transformations in order: rotation, scale, translation
-	localMat = glm::translate(pos) * glm::scale(scale) * glm::toMat4(rot);
+	localMat = glm::translate(glm::scale(glm::mat4_cast(rot), scale), pos);
 	//Technically the scene can be transformed, and it lacks a parent
 	if (this->parent) {
 		//Apply local transformation, then parent, then parent's parent, etc
@@ -87,5 +96,12 @@ void SceneObject::updateMatrix() {
 	//Update child matrices
 	for (SceneObject* o : this->getChildren()) {
 		o->updateMatrix();
+	}
+}
+
+void SceneObject::setScene(Scene* s) {
+	this->scene = scene;
+	for (SceneObject* c : children) {
+		c->setScene(s);
 	}
 }

@@ -10,7 +10,7 @@ For example these can be:
 */
 #include<vector>
 #include "glm/glm.hpp"
-#include "glm/gtx/quaternion.hpp"
+#include "glm/gtc/quaternion.hpp"
 using std::vector;
 class Scene;
 
@@ -19,6 +19,8 @@ public:
 	SceneObject();
 	SceneObject(SceneObject& other);
 	virtual ~SceneObject();
+	//Sets the object's parent to obj,
+	bool setParent(Scene* obj);
 	//Sets the object's parent to obj, making it a part of that object's scene
 	bool setParent(SceneObject* obj);
 	//Gets the parent of the object
@@ -39,6 +41,12 @@ public:
 	void setScale(glm::vec3 scale);
 	//Sets the rotation of the object
 	void setRotation(glm::quat rot);
+	//Gets the postion of the object
+	glm::vec3 getPosition() const { return pos; };
+	//Gets the scale of the object
+	glm::vec3 getScale() const { return scale; };
+	//Gets the rotation of the object
+	glm::quat getRotation() const { return rot; };
 private:
 	Scene* scene;
 	SceneObject* parent;
@@ -49,5 +57,6 @@ private:
 	glm::mat4 localMat;
 	glm::mat4 globalMat;
 	void updateMatrix();
+	void setScene(Scene* s);
 };
 
