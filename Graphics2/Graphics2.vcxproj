@@ -127,12 +127,14 @@
     <ClCompile Include="renderer\Renderable.cpp" />
     <ClCompile Include="renderer\Scene.cpp" />
     <ClCompile Include="renderer\SceneObject.cpp" />
+    <ClCompile Include="renderer\Shader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="renderer\OpenGLSetup.h" />
     <ClInclude Include="renderer\Renderable.h" />
     <ClInclude Include="renderer\Scene.h" />
     <ClInclude Include="renderer\SceneObject.h" />
+    <ClInclude Include="renderer\Shader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

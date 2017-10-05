@@ -1,6 +1,7 @@
 #include "SceneObject.h"
-
-
+#include <iostream>
+#include "glm/gtx/transform.hpp"
+#include "glm/gtx/quaternion.hpp"
 
 SceneObject::SceneObject() {
 	//TODO: Initialise
@@ -20,11 +21,14 @@ SceneObject::~SceneObject() {
 
 bool SceneObject::setParent(SceneObject* obj) {
 	//Ensure object exists, and doesn't create a loop
-	if (obj == nullptr || obj == this || this->hasDescendent(obj)) {
-		return false;
+	if (obj == this || this->hasDescendent(obj)) {
+		std::cerr << "Circular reference in object hierarchy" << std::endl;
+		throw;
 	}
 	this->parent = obj;
-	obj->children.push_back(this);
+	if (obj) {
+		obj->children.push_back(this);
+	}
 	return true;
 }
 
@@ -57,13 +61,24 @@ glm::mat4 SceneObject::getGlobalMatrix() {
 	return globalMat;
 }
 
-void SceneObject::setLocalMatrix(glm::mat4 m) {
-	localMat = m;
-	//Update global matrix for hierarchy
+void SceneObject::setPosition(glm::vec3 pos) {
+	this->pos = pos;
+	updateMatrix();
+}
+
+void SceneObject::setScale(glm::vec3 scale) {
+	this->scale = scale;
+	updateMatrix();
+}
+
+void SceneObject::setRotation(glm::quat rot) {
+	this->rot = rot;
 	updateMatrix();
 }
 
 void SceneObject::updateMatrix() {
+	//Apply transformations in order: rotation, scale, translation
+	localMat = glm::translate(pos) * glm::scale(scale) * glm::toMat4(rot);
 	//Technically the scene can be transformed, and it lacks a parent
 	if (this->parent) {
 		//Apply local transformation, then parent, then parent's parent, etc
@@ -74,4 +89,3 @@ void SceneObject::updateMatrix() {
 		o->updateMatrix();
 	}
 }
-

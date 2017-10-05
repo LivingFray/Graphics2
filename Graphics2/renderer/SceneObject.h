@@ -10,6 +10,7 @@ For example these can be:
 */
 #include<vector>
 #include "glm/glm.hpp"
+#include "glm/gtx/quaternion.hpp"
 using std::vector;
 class Scene;
 
@@ -32,12 +33,19 @@ public:
 	glm::mat4 getLocalMatrix();
 	//Gets the transformation matrix in relation to the scene
 	glm::mat4 getGlobalMatrix();
-	//Sets the local matrix and recalculates necessary global matrices
-	void setLocalMatrix(glm::mat4 m);
+	//Sets the position of the object
+	void setPosition(glm::vec3 pos);
+	//Sets the scale of the object
+	void setScale(glm::vec3 scale);
+	//Sets the rotation of the object
+	void setRotation(glm::quat rot);
 private:
 	Scene* scene;
 	SceneObject* parent;
 	vector<SceneObject*> children;
+	glm::vec3 pos;
+	glm::vec3 scale;
+	glm::quat rot;
 	glm::mat4 localMat;
 	glm::mat4 globalMat;
 	void updateMatrix();
