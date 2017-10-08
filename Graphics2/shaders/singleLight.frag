@@ -68,6 +68,8 @@ void main(){
 		calcSpotLight();
 	}
 	color = color + vec4(texture(emissionMap, texCoords).rgb, 1.0);
+	//"Fullbright" debug mode
+	//color = texture(diffuse, texCoords).rgba;
 }
 
 void calcDirectional(){

@@ -22,9 +22,10 @@ int main() {
 	anotherCube.setScale(glm::vec3(0.5, 0.5, 0.5));
 	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 6.0f));
 	aModel.setParent(&aScene);
-	assert(aModel.loadModel("nanosuit/nanosuit.obj"));
+	assert(aModel.loadModel("assets/nanosuit/nanosuit.obj"));
 	aModel.setScale(glm::vec3(0.1, 0.1, 0.1));
-	aModel.setPosition(glm::vec3(0.0, 0.0, 1.0));
+	aModel.setPosition(glm::vec3(0.0, 0.0, 3.0));
+	//aModel.setRotation(glm::quat(glm::vec3(1.58, 0.0, 0.0)));
 	//aCamera.setRotation(glm::quat(glm::vec3(0.0f, 0.2f, 0.0f)));
 	double time = glfwGetTime();
 	double dt = 0.0;
@@ -58,7 +59,7 @@ int main() {
 		}
 		anotherCube.setScale(glm::vec3(s,s,s));
 		aCube.setPosition(glm::vec3(0.0f, 0.0f, -pos));
-		//aCamera.setRotation(glm::quat(glm::vec3(0.0f, cam, 0.0f)));
+		aModel.setRotation(glm::quat(glm::vec3(0.0f, cam, 0.0f)));
 		//FPS counter
 		frames++;
 		t += dt;

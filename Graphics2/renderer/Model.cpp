@@ -50,14 +50,15 @@ bool Model::loadModel(const char* path) {
 			verts.push_back(v);
 			p = s.mesh.indices[i].normal_index;
 			v = glm::vec3(attrib.normals[3 * p + 0],
-				attrib.vertices[3 * p + 1],
-				attrib.vertices[3 * p + 2]);
+				attrib.normals[3 * p + 1],
+				attrib.normals[3 * p + 2]);
 			norms.push_back(v);
 			p = s.mesh.indices[i].texcoord_index;
 			glm::vec2 u = glm::vec2(attrib.texcoords[2 * p + 0],
-				attrib.vertices[2 * p + 1]);
+				attrib.texcoords[2 * p + 1]);
 			uvs.push_back(u);
 		}
+		//Compute tangents and bitangents
 		computeTangentBasis(verts, uvs, norms, tans, bitans);
 		std::vector<unsigned short> ind;
 		std::vector<glm::vec3> v_out;
@@ -68,10 +69,10 @@ bool Model::loadModel(const char* path) {
 		indexVBO(verts, uvs, norms, tans, bitans, ind, v_out, u_out, n_out, t_out, b_out);
 		m->setMesh(ind, v_out, u_out, n_out, t_out, b_out);
 		tinyobj::material_t mat = materials[s.mesh.material_ids[0]];
-		m->setDiffuse(OpenGLSetup::loadImage(mat.diffuse_texname));
-		m->setNormal(OpenGLSetup::loadImage(mat.normal_texname));
-		m->setSpecular(OpenGLSetup::loadImage(mat.specular_texname));
-		m->setEmission(OpenGLSetup::loadImage(mat.emissive_texname));
+		m->setDiffuse(OpenGLSetup::loadImage(baseDir + mat.diffuse_texname));
+		m->setNormal(OpenGLSetup::loadImage(baseDir + mat.normal_texname));
+		m->setSpecular(OpenGLSetup::loadImage(baseDir + mat.specular_texname));
+		m->setEmission(OpenGLSetup::loadImage(baseDir + mat.emissive_texname));
 		m->setParent(this);
 	}
 
