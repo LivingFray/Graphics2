@@ -1,11 +1,11 @@
 #include "Mesh.h"
 
 //Temp lighting
-glm::vec3 ambientLight(0.4f, 0.4f, 0.4f);
+glm::vec3 ambientLight(0.2f, 0.2f, 0.2f);
 glm::vec3 diffuseLight(1.0f, 1.0f, 1.0f);
-glm::vec3 specularLight(1.0f, 1.0f, 1.0f);
+glm::vec3 specularLight(0.2f, 0.2f, 0.2f);
 
-glm::vec3 direction(0.0f, -1.0f, 0.0f);
+glm::vec3 direction(0.0f, 1.0f, 0.0f);
 
 Mesh::Mesh() {
 	shader = Shader("shaders/singleLight.vert", "shaders/singleLight.frag");
