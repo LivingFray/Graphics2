@@ -125,6 +125,8 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="renderer\Camera.cpp" />
     <ClCompile Include="renderer\Cube.cpp" />
+    <ClCompile Include="renderer\Mesh.cpp" />
+    <ClCompile Include="renderer\Model.cpp" />
     <ClCompile Include="renderer\OpenGLSetup.cpp" />
     <ClCompile Include="renderer\Renderable.cpp" />
     <ClCompile Include="renderer\Scene.cpp" />
@@ -134,6 +136,8 @@
   <ItemGroup>
     <ClInclude Include="renderer\Camera.h" />
     <ClInclude Include="renderer\Cube.h" />
+    <ClInclude Include="renderer\Mesh.h" />
+    <ClInclude Include="renderer\Model.h" />
     <ClInclude Include="renderer\OpenGLSetup.h" />
     <ClInclude Include="renderer\Renderable.h" />
     <ClInclude Include="renderer\Scene.h" />

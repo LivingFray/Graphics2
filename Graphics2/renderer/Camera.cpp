@@ -1,6 +1,7 @@
 #include "Camera.h"
 #include "glm/gtc/constants.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtc/matrix_inverse.hpp"
 #include "Scene.h"
 #include <iostream>
 
@@ -58,10 +59,8 @@ glm::mat4 Camera::getProjection() {
 	return proj;
 }
 
-glm::mat4 Camera::getView() const {
-	glm::mat4 view = glm::translate(glm::mat4(1.0f), -getPosition());
-	view = glm::mat4_cast(getRotation()) * view;
-	return view;
+glm::mat4 Camera::getView() {
+	return glm::affineInverse(getGlobalMatrix());
 }
 
 void Camera::render() {

@@ -1,5 +1,9 @@
 #include "OpenGLSetup.h"
 #include <iostream>
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 //Flag that we could like to use the dedicated graphics card if available
 //(Why my computer feels the need to use an integrated chip over
 // a GTX 1060 by default I do not understand)
@@ -75,4 +79,28 @@ void OpenGLSetup::sharedInit() {
 	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl
 		<< "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl
 		<< "Vendor: " << glGetString(GL_VENDOR) << std::endl;
+}
+
+GLuint OpenGLSetup::loadImage(std::string filename) {
+	//TODO: Handling to allow for automatic deletion
+	//if (textures[filename]) {
+	//	return textures[filename];
+	//}
+	GLuint tex;
+	glGenTextures(1, &tex);
+	GLenum err = glGetError();
+	int width, height, channels;
+	unsigned char* data = nullptr;
+	data = stbi_load(filename.c_str(), &width, &height, &channels, 0);
+	if (data) {
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexImage2D(GL_TEXTURE_2D, 0, channels == 3 ? GL_RGB : GL_RGBA, width, height, 0, channels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		stbi_image_free(data);
+	//	textures.insert_or_assign(filename, tex);
+	}
+	return tex;
 }

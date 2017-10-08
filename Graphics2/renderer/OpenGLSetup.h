@@ -4,6 +4,7 @@ Sets up all the necessary OpenGL things
 */
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <string>
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3.lib")
 #pragma comment(lib, "glew32.lib")
@@ -21,6 +22,7 @@ public:
 	//Shuts everything down
 	static void destroy();
 	static GLFWwindow* window;
+	static GLuint loadImage(std::string filename);
 private:
 	//Does most of the heavy lifting when initialising
 	static void sharedInit();

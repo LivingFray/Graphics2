@@ -36,7 +36,7 @@ public:
 	// Gets the projection matrix associated with the camera
 	glm::mat4 getProjection();
 	// Gets the view matrix associated with the camera
-	glm::mat4 getView() const;
+	glm::mat4 getView();
 	// Whether the camera clears the scene before drawing
 	bool clearOnDraw;
 	// Renders the scene from the perspective of this camera
