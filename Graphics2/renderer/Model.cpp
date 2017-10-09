@@ -73,6 +73,7 @@ bool Model::loadModel(const char* path) {
 		m->setNormal(OpenGLSetup::loadImage(baseDir + mat.normal_texname));
 		m->setSpecular(OpenGLSetup::loadImage(baseDir + mat.specular_texname));
 		m->setEmission(OpenGLSetup::loadImage(baseDir + mat.emissive_texname));
+		m->setShininess(*mat.specular);
 		m->setParent(this);
 	}
 

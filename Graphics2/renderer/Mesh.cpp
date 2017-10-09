@@ -5,7 +5,8 @@ glm::vec3 ambientLight(0.2f, 0.2f, 0.2f);
 glm::vec3 diffuseLight(1.0f, 1.0f, 1.0f);
 glm::vec3 specularLight(0.2f, 0.2f, 0.2f);
 
-glm::vec3 direction(0.0f, 1.0f, 0.0f);
+glm::vec3 position(0.0f, 0.0f, 0.0f);
+glm::vec3 direction(0.0f, 0.0f, 1.0f);
 
 Mesh::Mesh() {
 	shader = Shader("shaders/singleLight.vert", "shaders/singleLight.frag");
@@ -26,9 +27,16 @@ Mesh::Mesh() {
 	glUniform3fv(glGetUniformLocation(program, "light.ambient"), 1, &ambientLight[0]);
 	glUniform3fv(glGetUniformLocation(program, "light.diffuse"), 1, &diffuseLight[0]);
 	glUniform3fv(glGetUniformLocation(program, "light.specular"), 1, &specularLight[0]);
-	glUniform1i(glGetUniformLocation(program, "lightType"), 0);
-	glUniform3fv(glGetUniformLocation(program, "dirLight.direction"), 1, &direction[0]);
+	glUniform1i(glGetUniformLocation(program, "lightType"), 2);
+	glUniform3fv(glGetUniformLocation(program, "spotLight.position"), 1, &position[0]);
+	glUniform3fv(glGetUniformLocation(program, "spotLight.direction"), 1, &direction[0]);
+	glUniform1f(glGetUniformLocation(program, "spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
+	glUniform1f(glGetUniformLocation(program, "spotLight.outerCutOff"), glm::cos(glm::radians(17.5f)));
+	glUniform1f(glGetUniformLocation(program, "spotLight.constant"), 1.0f);
+	glUniform1f(glGetUniformLocation(program, "spotLight.linear"), 0.09f);
+	glUniform1f(glGetUniformLocation(program, "spotLight.quadratic"), 0.032f);
 	glUseProgram(0);
+	shininess = 0;
 }
 
 //TODO: Copy

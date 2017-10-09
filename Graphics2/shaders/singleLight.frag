@@ -112,7 +112,7 @@ void calcPointLight(){
 	float diff = max(dot(norm, lightD), 0.0);
 	vec3 d = light.diffuse * diff * diffuseTex;
 	//Get specular colours
-	float spec = pow(max(dot(norm, halfDir), 0.0), shininess);
+	float spec = max(0, pow(max(dot(norm, halfDir), 0.0), shininess));
 	vec3 s = light.specular * spec * specularTex;
 	//Combine 3 colours
 	float dist = length(lightPos - tangentPosition);
@@ -147,7 +147,7 @@ void calcSpotLight(){
 		float diff = max(dot(norm, lightD), 0.0);
 		vec3 d = light.diffuse * diff * diffuseTex;
 		//Get specular colours
-		float spec = pow(max(dot(norm, halfDir), 0.0), shininess);
+		float spec = max(0, pow(max(dot(norm, halfDir), 0.0), shininess));
 		vec3 s = light.specular * spec * specularTex;
 		//Combine 3 colours
 		color = vec4((a + d * intensity + s * intensity) * att, 1.0);

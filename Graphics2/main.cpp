@@ -22,8 +22,10 @@ int main() {
 	anotherCube.setScale(glm::vec3(0.5, 0.5, 0.5));
 	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 6.0f));
 	aModel.setParent(&aScene);
+	//assert(aModel.loadModel("assets/testing/square.obj"));
 	assert(aModel.loadModel("assets/nanosuit/nanosuit.obj"));
 	aModel.setScale(glm::vec3(0.2, 0.2, 0.2));
+	//aModel.setPosition(glm::vec3(0.0, 0.0, 3.0));
 	aModel.setPosition(glm::vec3(0.0, -2.0, 3.0));
 	//aModel.setRotation(glm::quat(glm::vec3(1.58, 0.0, 0.0)));
 	//aCamera.setRotation(glm::quat(glm::vec3(0.0f, 0.2f, 0.0f)));
