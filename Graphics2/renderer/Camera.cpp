@@ -79,4 +79,6 @@ void Camera::render() {
 	for (Renderable* r : renderables) {
 		r->render(this);
 	}
+	//Lastly, render the skybox
+	this->getScene()->renderSkybox(this);
 }

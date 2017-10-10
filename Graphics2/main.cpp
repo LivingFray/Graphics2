@@ -12,6 +12,9 @@ int main() {
 	Scene aScene;
 	Camera aCamera;
 	Model aModel;
+	aScene.loadSkybox("assets/skybox/posX.png", "assets/skybox/negX.png",
+		"assets/skybox/posY.png", "assets/skybox/negY.png",
+		"assets/skybox/posZ.png", "assets/skybox/negZ.png");
 	//aCamera.setParent(&aCube);
 	aCamera.setParent(&aScene);
 	aCube.setParent(&aScene);
@@ -60,8 +63,8 @@ int main() {
 			cam -= 6.28f;
 		}
 		anotherCube.setScale(glm::vec3(s,s,s));
-		aCube.setPosition(glm::vec3(0.0f, 0.0f, -pos));
-		aModel.setRotation(glm::quat(glm::vec3(0.0f, cam, 0.0f)));
+		aCamera.setPosition(glm::vec3(0.0f, 0.0f, -pos));
+		aCamera.setRotation(glm::quat(glm::vec3(0.0f, cam, 0.0f)));
 		//FPS counter
 		frames++;
 		t += dt;
