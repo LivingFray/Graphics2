@@ -33,6 +33,8 @@ public:
 	bool hasChild(SceneObject* child);
 	//Checks if the child is a descendent of the object
 	bool hasDescendent(SceneObject* child);
+	//Sets the local transformation matrix
+	void setLocalMatrix(glm::mat4 local);
 	//Gets the transformation matrix local to this object
 	glm::mat4 getLocalMatrix();
 	//Gets the transformation matrix in relation to the scene
@@ -44,11 +46,16 @@ public:
 	//Sets the rotation of the object
 	void setRotation(glm::quat rot);
 	//Gets the postion of the object
-	glm::vec3 getPosition() const { return pos; };
+	glm::vec3 getPosition();
 	//Gets the scale of the object
-	glm::vec3 getScale() const { return scale; };
+	glm::vec3 getScale();
 	//Gets the rotation of the object
-	glm::quat getRotation() const { return rot; };
+	glm::quat getRotation();
+	//Gets the cardinal directions under local transformation
+	glm::vec3 getFront();
+	glm::vec3 getUp();
+	glm::vec3 getRight();
+
 protected:
 	virtual void setScene(Scene* s);
 private:

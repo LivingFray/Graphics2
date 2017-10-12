@@ -12,8 +12,8 @@ Shader::Shader() {
 Shader::Shader(std::string vert, std::string frag) {
 	std::string vertString = readFile(vert);
 	std::string fragString = readFile(frag);
-	if (shaders[vertString + fragString]) {
-		id = shaders[vertString + fragString];
+	if (shaders[vert + frag]) {
+		id = shaders[vert + frag];
 	} else {
 		const char* vertChars = vertString.c_str();
 		const char* fragChars = fragString.c_str();
@@ -59,7 +59,7 @@ Shader::Shader(std::string vert, std::string frag) {
 			glDetachShader(id, fragment);
 			glDeleteShader(vertex);
 			glDeleteShader(fragment);
-			shaders.insert_or_assign(vertString + fragString, id);
+			shaders.insert_or_assign(vert + frag, id);
 		}
 	}
 }

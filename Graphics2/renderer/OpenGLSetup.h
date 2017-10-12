@@ -21,8 +21,9 @@ public:
 		GLFWmonitor* monitor = NULL);
 	//Shuts everything down
 	static void destroy();
-	static GLFWwindow* window;
+	//Loads an image from file
 	static GLuint loadImage(std::string filename);
+	static GLFWwindow* window;
 private:
 	//Does most of the heavy lifting when initialising
 	static void sharedInit();

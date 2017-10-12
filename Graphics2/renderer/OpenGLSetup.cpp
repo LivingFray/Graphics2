@@ -66,13 +66,15 @@ void OpenGLSetup::sharedInit() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 	glfwWindowHint(GLFW_SAMPLES, 4);
-	glfwMakeContextCurrent(window); // Initialize GLEW
+	glfwMakeContextCurrent(window);
+	// Initialize GLEW
 	glewExperimental = true;
 	if (glewInit() != GLEW_OK) {
 		std::cerr << "Could not initialise GLEW" << std::endl;
 		glfwTerminate();
 		exit(1);
 	}
+	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	//Useful debug info about the graphics card in use
 	//(This is where I learnt I was using an integrated chip by default)

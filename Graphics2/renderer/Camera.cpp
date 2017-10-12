@@ -14,6 +14,8 @@ Camera::Camera() {
 	glfwGetWindowSize(OpenGLSetup::window, &w, &h);
 	width = static_cast<float>(w);
 	height = static_cast<float>(h);
+	if (width < 1) { width = 1; };
+	if (height < 1) { height = 1; };
 	proj = glm::perspective(fov, width / height, near, far);
 	clearOnDraw = true;
 	updateFlag = false;
@@ -25,26 +27,32 @@ Camera::~Camera() {
 
 void Camera::setFOV(GLfloat fov) {
 	this->fov = fov;
+	updateFlag = true;
 }
 
 void Camera::setPerspective(bool perspective) {
 	this->perspective = perspective;
+	updateFlag = true;
 }
 
 void Camera::setNear(GLfloat near) {
 	this->near = near;
+	updateFlag = true;
 }
 
 void Camera::setFar(GLfloat far) {
 	this->far = far;
+	updateFlag = true;
 }
 
 void Camera::setWidth(GLfloat width) {
 	this->width = width;
+	updateFlag = true;
 }
 
 void Camera::setHeight(GLfloat height) {
 	this->height = height;
+	updateFlag = true;
 }
 
 glm::mat4 Camera::getProjection() {
