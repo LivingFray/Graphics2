@@ -20,4 +20,3 @@ void Renderable::setScene(Scene* s) {
 		s->renderables.insert(this);
 	}
 }
-

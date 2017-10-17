@@ -76,15 +76,6 @@ bool Model::loadModel(const char* path) {
 		m->setShininess(*mat.specular);
 		m->setParent(this);
 	}
-
-	/*
-	//Simplified obj loading, assume 1 shape + 1 material
-	setMesh(attrib.vertices, attrib.texcoords, attrib.normals);
-	texture = OpenGLSetup::loadImage(materials[0].diffuse_texname);
-	specular = OpenGLSetup::loadImage(materials[0].specular_texname);
-	emission = OpenGLSetup::loadImage(materials[0].emissive_texname);
-	normal = OpenGLSetup::loadImage(materials[0].normal_texname);
-	*/
 	return true;
 }
 

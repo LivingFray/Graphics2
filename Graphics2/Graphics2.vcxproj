@@ -125,24 +125,32 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="renderer\Camera.cpp" />
     <ClCompile Include="renderer\Cube.cpp" />
+    <ClCompile Include="renderer\DirectionalLight.cpp" />
+    <ClCompile Include="renderer\Light.cpp" />
     <ClCompile Include="renderer\Mesh.cpp" />
     <ClCompile Include="renderer\Model.cpp" />
     <ClCompile Include="renderer\OpenGLSetup.cpp" />
+    <ClCompile Include="renderer\PointLight.cpp" />
     <ClCompile Include="renderer\Renderable.cpp" />
     <ClCompile Include="renderer\Scene.cpp" />
     <ClCompile Include="renderer\SceneObject.cpp" />
     <ClCompile Include="renderer\Shader.cpp" />
+    <ClCompile Include="renderer\SpotLight.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="renderer\Camera.h" />
     <ClInclude Include="renderer\Cube.h" />
+    <ClInclude Include="renderer\DirectionalLight.h" />
+    <ClInclude Include="renderer\Light.h" />
     <ClInclude Include="renderer\Mesh.h" />
     <ClInclude Include="renderer\Model.h" />
     <ClInclude Include="renderer\OpenGLSetup.h" />
+    <ClInclude Include="renderer\PointLight.h" />
     <ClInclude Include="renderer\Renderable.h" />
     <ClInclude Include="renderer\Scene.h" />
     <ClInclude Include="renderer\SceneObject.h" />
     <ClInclude Include="renderer\Shader.h" />
+    <ClInclude Include="renderer\SpotLight.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

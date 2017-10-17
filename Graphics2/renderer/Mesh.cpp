@@ -9,7 +9,7 @@ glm::vec3 position(0.0f, 0.0f, 0.0f);
 glm::vec3 direction(0.0f, 0.0f, 1.0f);
 
 Mesh::Mesh() {
-	shader = Shader("shaders/singleLight.vert", "shaders/singleLight.frag");
+	shader = Shader("shaders/multiLight.vert", "shaders/multiLight.frag");
 	program = shader.getProgram();
 	glGenVertexArrays(1, &vertexArray);
 	glGenBuffers(1, &elementBuffer);
@@ -23,18 +23,6 @@ Mesh::Mesh() {
 	glUniform1i(glGetUniformLocation(program, "specular"), 1);
 	glUniform1i(glGetUniformLocation(program, "normalMap"), 2);
 	glUniform1i(glGetUniformLocation(program, "emissionMap"), 3);
-	//Tempory skylight:
-	glUniform3fv(glGetUniformLocation(program, "light.ambient"), 1, &ambientLight[0]);
-	glUniform3fv(glGetUniformLocation(program, "light.diffuse"), 1, &diffuseLight[0]);
-	glUniform3fv(glGetUniformLocation(program, "light.specular"), 1, &specularLight[0]);
-	glUniform1i(glGetUniformLocation(program, "lightType"), 2);
-	glUniform3fv(glGetUniformLocation(program, "spotLight.position"), 1, &position[0]);
-	glUniform3fv(glGetUniformLocation(program, "spotLight.direction"), 1, &direction[0]);
-	glUniform1f(glGetUniformLocation(program, "spotLight.cutOff"), glm::cos(glm::radians(12.5f)));
-	glUniform1f(glGetUniformLocation(program, "spotLight.outerCutOff"), glm::cos(glm::radians(17.5f)));
-	glUniform1f(glGetUniformLocation(program, "spotLight.constant"), 1.0f);
-	glUniform1f(glGetUniformLocation(program, "spotLight.linear"), 0.09f);
-	glUniform1f(glGetUniformLocation(program, "spotLight.quadratic"), 0.032f);
 	glUseProgram(0);
 	shininess = 0;
 }
@@ -104,12 +92,6 @@ void Mesh::render(Camera* cam) {
 	glBindTexture(GL_TEXTURE_2D, emission);
 	//Shininess
 	glUniform1f(glGetUniformLocation(program, "shininess"), shininess);
-	//UPDATE LIGHTING HERE
-	//
-	//
-	//
-	//
-	//UPDATE LIGHTING HERE
 	//Pass matrices to shader
 	glUniformMatrix4fv(glGetUniformLocation(program, "model"), 1, false, &(this->getGlobalMatrix())[0][0]);
 	glm::mat3 inv = glm::mat3(glm::transpose(glm::inverse(this->getGlobalMatrix())));
@@ -117,7 +99,7 @@ void Mesh::render(Camera* cam) {
 	glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, false, &(cam->getView())[0][0]);
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, false, &(cam->getProjection())[0][0]);
 	//Pass the camera position
-	glUniform3fv(glGetUniformLocation(program, "viewPos"), 1, &(cam->getPosition())[0]);
+	glUniform3fv(glGetUniformLocation(program, "viewPos"), 1, &(cam->getGlobalPosition())[0]);
 	//Pass the MVP matrix to the shaders
 	//glUniformMatrix4fv(mvpUniform, 1, false, &mvp[0][0]);
 	//Draw the VAO

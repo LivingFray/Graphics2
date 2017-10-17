@@ -55,6 +55,8 @@ public:
 	glm::vec3 getFront();
 	glm::vec3 getUp();
 	glm::vec3 getRight();
+	//Gets the global position of the object
+	glm::vec3 getGlobalPosition();
 
 protected:
 	virtual void setScene(Scene* s);

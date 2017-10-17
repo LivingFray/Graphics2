@@ -8,6 +8,9 @@ scene and local objects like spaceships with another)
 #include <string>
 #include "SceneObject.h"
 #include "Renderable.h"
+#include "DirectionalLight.h"
+#include "PointLight.h"
+#include "SpotLight.h"
 
 using std::string;
 using std::set;
@@ -19,13 +22,22 @@ public:
 	const set<Renderable*>& getRenderables() { return renderables; };
 	void loadSkybox(string posX, string negX, string posY, string negY, string posZ, string negZ);
 	void renderSkybox(Camera* c);
+	void updateLights();
+	glm::vec3 ambientLight;
 private:
 	//Special rendering list
 	set<Renderable*> renderables;
+	DirectionalLight* dirLight;
+	set<PointLight*> pointLights;
+	set<SpotLight*> spotLights;
 	friend Renderable;
+	friend DirectionalLight;
+	friend PointLight;
+	friend SpotLight;
 	//list<Camera*> cameras;
 	GLuint skybox;
-	Shader shader;
+	Shader skyboxShader;
+	Shader meshShader;
 	GLuint vertexArray;
 	GLuint vertexBuffer;
 	GLuint viewUniform;
@@ -75,4 +87,3 @@ private:
 		1.0f, -1.0f,  1.0f
 	};
 };
-

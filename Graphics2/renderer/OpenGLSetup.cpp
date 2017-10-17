@@ -81,6 +81,8 @@ void OpenGLSetup::sharedInit() {
 	std::cout << "OpenGL version: " << glGetString(GL_VERSION) << std::endl
 		<< "GLSL version: " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl
 		<< "Vendor: " << glGetString(GL_VENDOR) << std::endl;
+	//Correct image loading
+	stbi_set_flip_vertically_on_load(true);
 }
 
 GLuint OpenGLSetup::loadImage(std::string filename) {

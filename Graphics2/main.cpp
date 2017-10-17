@@ -83,6 +83,8 @@ int main() {
 	Cube anotherCube;
 	Scene aScene;
 	Model aModel;
+	//Model anotherModel;
+	DirectionalLight sunLight;
 	glfwSetWindowSizeCallback(OpenGLSetup::window, windowResized);
 	int w, h;
 	glfwGetWindowSize(OpenGLSetup::window, &w, &h);
@@ -90,8 +92,13 @@ int main() {
 	aScene.loadSkybox("assets/skybox/posX.png", "assets/skybox/negX.png",
 		"assets/skybox/posY.png", "assets/skybox/negY.png",
 		"assets/skybox/posZ.png", "assets/skybox/negZ.png");
+	////In case of messed up skybox, use this for debug
+	//aScene.loadSkybox("assets/skybox/right.png", "assets/skybox/left.png",
+	//	"assets/skybox/top.png", "assets/skybox/bottom.png",
+	//	"assets/skybox/back.png", "assets/skybox/front.png");
 	//aCamera.setParent(&aCube);
 	aCamera.setParent(&aScene);
+	//aCamera.setParent(&aModel);
 	aCube.setParent(&aScene);
 	aCube.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 	anotherCube.setRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.78f)));
@@ -100,13 +107,21 @@ int main() {
 	anotherCube.setScale(glm::vec3(0.5, 0.5, 0.5));
 	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 6.0f));
 	aModel.setParent(&aScene);
-	//assert(aModel.loadModel("assets/testing/square.obj"));
-	assert(aModel.loadModel("assets/nanosuit/nanosuit.obj"));
-	aModel.setScale(glm::vec3(0.2, 0.2, 0.2));
-	//aModel.setPosition(glm::vec3(0.0, 0.0, 3.0));
-	aModel.setPosition(glm::vec3(0.0, -2.0, 3.0));
+	assert(aModel.loadModel("assets/testing/capsule.obj"));
+	//anotherModel.setParent(&aScene);
+	//assert(anotherModel.loadModel("assets/testing/square.obj"));
+	//anotherModel.setRotation(glm::quat(glm::vec3(1.58, 0.7, 0.0)));
+	//anotherModel.setPosition(glm::vec3(0.0, 0.0, -5.0));
+	//assert(aModel.loadModel("assets/nanosuit/nanosuit.obj"));
+	//aModel.setScale(glm::vec3(0.2, 0.2, 0.2));
+	aModel.setPosition(glm::vec3(0.0, 0.0, 3.0));
+	//anotherModel.setPosition(glm::vec3(0.0, -2.0, 3.0));
 	//aModel.setRotation(glm::quat(glm::vec3(1.58, 0.0, 0.0)));
 	//aCamera.setRotation(glm::quat(glm::vec3(0.0f, 0.2f, 0.0f)));
+	sunLight.direction = glm::vec3(0.0f, -1.0f, 0.0f);
+	sunLight.diffuse = glm::vec3(1.0, 1.0, 1.0);
+	sunLight.specular = glm::vec3(0.0, 0.0, 0.0);
+	sunLight.setParent(&aScene);
 	glfwSetInputMode(OpenGLSetup::window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	double time = glfwGetTime();
 	double dt = 0.0;
@@ -116,6 +131,8 @@ int main() {
 	float s = 0.5f;
 	bool big = true;
 	float cam = 0.0f;
+	float flip = 0.0;
+	char state = 0;
 	glfwSetCursorPos(OpenGLSetup::window,
 		static_cast<double>(w) / 2.0,
 		static_cast<double>(h) / 2.0
@@ -143,9 +160,43 @@ int main() {
 		}
 		anotherCube.setScale(glm::vec3(s,s,s));
 		//aCamera.setPosition(glm::vec3(0.0f, 0.0f, -pos));
-		aModel.setRotation(glm::quat(glm::vec3(0.0f, cam, 0.0f)));
+		//aModel.setRotation(glm::quat(glm::vec3(cam, 0.0f, 0.0f)));
+		//sunLight.direction = glm::vec3(cos(cam), sin(cam), 0.0);
 		updateCamera(dt);
-
+		flip += dt;
+		if (flip > 5.0) {
+			state++;
+			state %= 6;
+			flip = 0.0;
+		}
+		switch (state) {
+		case 0:
+			sunLight.direction = glm::vec3(0.0, 0.0, -1.0);
+			anotherCube.setPosition(glm::vec3(0.0, 0.0, 5.0));
+			break;
+		case 1:
+			sunLight.direction = glm::vec3(0.0, 0.0, 1.0);
+			anotherCube.setPosition(glm::vec3(0.0, 0.0, -5.0));
+			break;
+		case 2:
+			sunLight.direction = glm::vec3(0.0, -1.0, 0.0);
+			anotherCube.setPosition(glm::vec3(0.0, 5.0, 0.0));
+			break;
+		case 3:
+			sunLight.direction = glm::vec3(0.0, 1.0, 0.0);
+			anotherCube.setPosition(glm::vec3(0.0, -5.0, 0.0));
+			break;
+		case 4:
+			sunLight.direction = glm::vec3(-1.0, 0.0, 0.0);
+			anotherCube.setPosition(glm::vec3(5.0, 0.0, 0.0));
+			break;
+		case 5:
+			sunLight.direction = glm::vec3(1.0, 0.0, 0.0);
+			anotherCube.setPosition(glm::vec3(-5.0, 0.0, 0.0));
+			break;
+		default:
+			break;
+		}
 		aCamera.render();
 		//FPS counter
 		frames++;

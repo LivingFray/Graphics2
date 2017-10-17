@@ -131,6 +131,10 @@ glm::vec3 SceneObject::getRight() {
 	return glm::normalize(glm::vec3(localMat * glm::vec4(1.0, 0.0, 0.0, 1.0)));
 }
 
+glm::vec3 SceneObject::getGlobalPosition() {
+	return glm::vec3(globalMat[3]);
+}
+
 void SceneObject::updateMatrix() {
 	//Technically the scene can be transformed, and it lacks a parent
 	if (this->parent) {

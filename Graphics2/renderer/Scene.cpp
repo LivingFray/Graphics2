@@ -3,9 +3,11 @@
 
 
 Scene::Scene() {
+	ambientLight = glm::vec3(0.2f, 0.2f, 0.2f);
 	//Skybox related things
 	skybox = 0;
-	shader = Shader("shaders/skybox.vert", "shaders/skybox.frag");
+	skyboxShader = Shader("shaders/skybox.vert", "shaders/skybox.frag");
+	meshShader = Shader("shaders/multiLight.vert", "shaders/multiLight.frag");
 	glGenVertexArrays(1, &vertexArray);
 	glBindVertexArray(vertexArray);
 	glGenBuffers(1, &vertexBuffer);
@@ -13,9 +15,9 @@ Scene::Scene() {
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), &vertexData, GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
-	viewUniform = glGetUniformLocation(shader.getProgram(), "view");
-	projUniform = glGetUniformLocation(shader.getProgram(), "projection");
-	cubeSampler = glGetUniformLocation(shader.getProgram(), "skybox");
+	viewUniform = glGetUniformLocation(skyboxShader.getProgram(), "view");
+	projUniform = glGetUniformLocation(skyboxShader.getProgram(), "projection");
+	cubeSampler = glGetUniformLocation(skyboxShader.getProgram(), "skybox");
 	glBindVertexArray(0);
 }
 
@@ -33,6 +35,7 @@ void Scene::loadSkybox(string posX, string negX, string posY, string negY, strin
 		glDeleteTextures(1, &skybox);
 		skybox = 0;
 	}
+	stbi_set_flip_vertically_on_load(false);
 	glGenTextures(1, &skybox);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, skybox);
 	int width, height, channels;
@@ -44,6 +47,7 @@ void Scene::loadSkybox(string posX, string negX, string posY, string negY, strin
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_X, 0, GL_RGB, width, height, 0, GL_RGB,
 		GL_UNSIGNED_BYTE, data);
 	stbi_image_free(data);
+	//stbi_set_flip_vertically_on_load(true);
 	data = stbi_load(posY.c_str(), &width, &height, &channels, 0);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB,
 		GL_UNSIGNED_BYTE, data);
@@ -52,11 +56,12 @@ void Scene::loadSkybox(string posX, string negX, string posY, string negY, strin
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, 0, GL_RGB, width, height, 0, GL_RGB,
 		GL_UNSIGNED_BYTE, data);
 	stbi_image_free(data);
-	data = stbi_load(posZ.c_str(), &width, &height, &channels, 0);
+	//stbi_set_flip_vertically_on_load(false);
+	data = stbi_load(negZ.c_str(), &width, &height, &channels, 0);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB,
 		GL_UNSIGNED_BYTE, data);
 	stbi_image_free(data);
-	data = stbi_load(negZ.c_str(), &width, &height, &channels, 0);
+	data = stbi_load(posZ.c_str(), &width, &height, &channels, 0);
 	glTexImage2D(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, 0, GL_RGB, width, height, 0, GL_RGB,
 		GL_UNSIGNED_BYTE, data);
 	stbi_image_free(data);
@@ -65,12 +70,13 @@ void Scene::loadSkybox(string posX, string negX, string posY, string negY, strin
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	stbi_set_flip_vertically_on_load(true);
 }
 
 void Scene::renderSkybox(Camera* c) {
 	if (skybox) {
 		//Set shaders
-		glUseProgram(shader.getProgram());
+		glUseProgram(skyboxShader.getProgram());
 		glDepthFunc(GL_LEQUAL);
 		glUniform1i(cubeSampler, 0);
 		//Remove translation from camera
@@ -86,3 +92,47 @@ void Scene::renderSkybox(Camera* c) {
 	}
 }
 
+void Scene::updateLights() {
+	//TODO: Apply transformations
+	//--Positions applied
+	//--Directions not applied
+	GLuint program = meshShader.getProgram();
+	glUseProgram(program);
+	glUniform3fv(glGetUniformLocation(program, "ambient"), 1, &ambientLight[0]);
+	//Update directional light
+	if (dirLight) {
+		glUniform3fv(glGetUniformLocation(program, "dirLight.direction"), 1, &dirLight->direction[0]);
+		glUniform3fv(glGetUniformLocation(program, "dirLight.diffuse"), 1, &dirLight->diffuse[0]);
+		glUniform3fv(glGetUniformLocation(program, "dirLight.specular"), 1, &dirLight->specular[0]);
+	}
+	glUniform1i(glGetUniformLocation(program, "numDirLights"), dirLight ? 1 : 0);
+	//Update point lights
+	int i = 0;
+	for (PointLight* p : pointLights) {
+		glm::mat4 mat = p->getGlobalMatrix();
+		glUniform3fv(glGetUniformLocation(program, ("pointLights[" + std::to_string(i) + "].position").c_str()), 1, &mat[3][0]);
+		glUniform3fv(glGetUniformLocation(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str()), 1, &p->diffuse[0]);
+		glUniform3fv(glGetUniformLocation(program, ("pointLights[" + std::to_string(i) + "].specular").c_str()), 1, &p->specular[0]);
+		glUniform1f(glGetUniformLocation(program,  ("pointLights[" + std::to_string(i) + "].quadratic").c_str()), p->quadratic);
+		glUniform1f(glGetUniformLocation(program,  ("pointLights[" + std::to_string(i) + "].linear").c_str()), p->linear);
+		glUniform1f(glGetUniformLocation(program,  ("pointLights[" + std::to_string(i) + "].constant").c_str()), p->constant);
+		i++;
+	}
+	glUniform1i(glGetUniformLocation(program, "numPointLights"), pointLights.size());
+	//Update spotlights
+	i = 0;
+	for (SpotLight* s : spotLights) {
+		glm::mat4 mat = s->getGlobalMatrix();
+		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].position").c_str()), 1, &mat[3][0]);
+		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].direction").c_str()), 1, &s->direction[0]);
+		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].diffuse").c_str()), 1, &s->diffuse[0]);
+		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].specular").c_str()), 1, &s->specular[0]);
+		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].quadratic").c_str()), s->quadratic);
+		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].linear").c_str()), s->linear);
+		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].constant").c_str()), s->constant);
+		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].cutOff").c_str()), s->cutOff);
+		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].outerCutOff").c_str()), s->outerCutOff);
+		i++;
+	}
+	glUseProgram(0);
+}
