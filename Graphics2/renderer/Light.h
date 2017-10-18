@@ -5,7 +5,6 @@ class Light :
 public:
 	Light();
 	virtual ~Light();
-	glm::vec3 diffuse;
-	glm::vec3 specular;
+	glm::vec3 colour;
 };
 

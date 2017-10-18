@@ -106,6 +106,40 @@ void Mesh::render(Camera* cam) {
 	//glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
+	//////DEBUG//////
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf((const GLfloat*)&(cam->getProjection())[0]);
+	glMatrixMode(GL_MODELVIEW);
+	glm::mat4 MV = (cam->getView()) * (this->getGlobalMatrix());
+	glLoadMatrixf((const GLfloat*)&MV[0]);
+	glUseProgram(0);
+	glBegin(GL_LINES);
+	for (int i = 0; i<indices.size(); i++) {
+		//Normals
+		glColor3f(0, 0, 1);
+		glm::vec3 p = vertices[indices[i]];
+		glVertex3fv(&p.x);
+		glm::vec3 o = glm::normalize(normals[indices[i]]);
+		p += o*0.1f;
+		glVertex3fv(&p.x);
+		//Tangents
+		glColor3f(1, 0, 0);
+		o = glm::normalize(tangents[indices[i]]);
+		p = vertices[indices[i]];
+		glVertex3fv(&p.x);
+		p += o*0.1f;
+		glVertex3fv(&p.x);
+		//Bitangents
+		glColor3f(0, 1, 0);
+		o = glm::normalize(bitangents[indices[i]]);
+		p = vertices[indices[i]];
+		glVertex3fv(&p.x);
+		p += o*0.1f;
+		glVertex3fv(&p.x);
+	}
+	glEnd();
+
+
 }
 
 void Mesh::setShininess(float shininess) {

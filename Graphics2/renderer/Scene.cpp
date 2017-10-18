@@ -102,8 +102,7 @@ void Scene::updateLights() {
 	//Update directional light
 	if (dirLight) {
 		glUniform3fv(glGetUniformLocation(program, "dirLight.direction"), 1, &dirLight->direction[0]);
-		glUniform3fv(glGetUniformLocation(program, "dirLight.diffuse"), 1, &dirLight->diffuse[0]);
-		glUniform3fv(glGetUniformLocation(program, "dirLight.specular"), 1, &dirLight->specular[0]);
+		glUniform3fv(glGetUniformLocation(program, "dirLight.colour"), 1, &dirLight->colour[0]);
 	}
 	glUniform1i(glGetUniformLocation(program, "numDirLights"), dirLight ? 1 : 0);
 	//Update point lights
@@ -111,8 +110,7 @@ void Scene::updateLights() {
 	for (PointLight* p : pointLights) {
 		glm::mat4 mat = p->getGlobalMatrix();
 		glUniform3fv(glGetUniformLocation(program, ("pointLights[" + std::to_string(i) + "].position").c_str()), 1, &mat[3][0]);
-		glUniform3fv(glGetUniformLocation(program, ("pointLights[" + std::to_string(i) + "].diffuse").c_str()), 1, &p->diffuse[0]);
-		glUniform3fv(glGetUniformLocation(program, ("pointLights[" + std::to_string(i) + "].specular").c_str()), 1, &p->specular[0]);
+		glUniform3fv(glGetUniformLocation(program, ("pointLights[" + std::to_string(i) + "].colour").c_str()), 1, &p->colour[0]);
 		glUniform1f(glGetUniformLocation(program,  ("pointLights[" + std::to_string(i) + "].quadratic").c_str()), p->quadratic);
 		glUniform1f(glGetUniformLocation(program,  ("pointLights[" + std::to_string(i) + "].linear").c_str()), p->linear);
 		glUniform1f(glGetUniformLocation(program,  ("pointLights[" + std::to_string(i) + "].constant").c_str()), p->constant);
@@ -125,8 +123,7 @@ void Scene::updateLights() {
 		glm::mat4 mat = s->getGlobalMatrix();
 		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].position").c_str()), 1, &mat[3][0]);
 		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].direction").c_str()), 1, &s->direction[0]);
-		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].diffuse").c_str()), 1, &s->diffuse[0]);
-		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].specular").c_str()), 1, &s->specular[0]);
+		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].colour").c_str()), 1, &s->colour[0]);
 		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].quadratic").c_str()), s->quadratic);
 		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].linear").c_str()), s->linear);
 		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].constant").c_str()), s->constant);

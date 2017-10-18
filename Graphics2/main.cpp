@@ -79,49 +79,35 @@ void updateCamera(double dt) {
 
 int main() {
 	OpenGLSetup::init();
-	Cube aCube;
 	Cube anotherCube;
 	Scene aScene;
 	Model aModel;
-	//Model anotherModel;
 	DirectionalLight sunLight;
 	glfwSetWindowSizeCallback(OpenGLSetup::window, windowResized);
 	int w, h;
 	glfwGetWindowSize(OpenGLSetup::window, &w, &h);
 	windowResized(OpenGLSetup::window, w, h);
-	aScene.loadSkybox("assets/skybox/posX.png", "assets/skybox/negX.png",
-		"assets/skybox/posY.png", "assets/skybox/negY.png",
-		"assets/skybox/posZ.png", "assets/skybox/negZ.png");
-	////In case of messed up skybox, use this for debug
-	//aScene.loadSkybox("assets/skybox/right.png", "assets/skybox/left.png",
-	//	"assets/skybox/top.png", "assets/skybox/bottom.png",
-	//	"assets/skybox/back.png", "assets/skybox/front.png");
-	//aCamera.setParent(&aCube);
+	////Skybox is very large, and causes massive slowdown in load times
+	//aScene.loadSkybox("assets/skybox/posX.png", "assets/skybox/negX.png",
+	//	"assets/skybox/posY.png", "assets/skybox/negY.png",
+	//	"assets/skybox/posZ.png", "assets/skybox/negZ.png");
+	//In case of messed up skybox, use this for debug
+	aScene.loadSkybox("assets/skybox/right.png", "assets/skybox/left.png",
+		"assets/skybox/top.png", "assets/skybox/bottom.png",
+		"assets/skybox/back.png", "assets/skybox/front.png");
 	aCamera.setParent(&aScene);
-	//aCamera.setParent(&aModel);
-	aCube.setParent(&aScene);
-	aCube.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
 	anotherCube.setRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.78f)));
 	anotherCube.setParent(&aScene);
 	anotherCube.setPosition(glm::vec3(0.0, 1.0, 0.0));
 	anotherCube.setScale(glm::vec3(0.5, 0.5, 0.5));
 	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 6.0f));
 	aModel.setParent(&aScene);
-	assert(aModel.loadModel("assets/testing/capsule.obj"));
-	//anotherModel.setParent(&aScene);
-	//assert(anotherModel.loadModel("assets/testing/square.obj"));
-	//anotherModel.setRotation(glm::quat(glm::vec3(1.58, 0.7, 0.0)));
-	//anotherModel.setPosition(glm::vec3(0.0, 0.0, -5.0));
-	//assert(aModel.loadModel("assets/nanosuit/nanosuit.obj"));
-	//aModel.setScale(glm::vec3(0.2, 0.2, 0.2));
-	aModel.setPosition(glm::vec3(0.0, 0.0, 3.0));
-	//anotherModel.setPosition(glm::vec3(0.0, -2.0, 3.0));
-	//aModel.setRotation(glm::quat(glm::vec3(1.58, 0.0, 0.0)));
-	//aCamera.setRotation(glm::quat(glm::vec3(0.0f, 0.2f, 0.0f)));
+	assert(aModel.loadModel("assets/testing/square.obj"));
+	aModel.setRotation(glm::quat(glm::vec3(0.0, 0.78, 0.0)));
 	sunLight.direction = glm::vec3(0.0f, -1.0f, 0.0f);
-	sunLight.diffuse = glm::vec3(1.0, 1.0, 1.0);
-	sunLight.specular = glm::vec3(0.0, 0.0, 0.0);
+	sunLight.colour = glm::vec3(1.0, 1.0, 1.0);
 	sunLight.setParent(&aScene);
+	aScene.ambientLight = glm::vec3(0.2, 0.2, 0.2);
 	glfwSetInputMode(OpenGLSetup::window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	double time = glfwGetTime();
 	double dt = 0.0;
@@ -158,10 +144,8 @@ int main() {
 		if (cam > 6.28f) {
 			cam -= 6.28f;
 		}
+		aModel.setRotation(glm::quat(glm::vec3(0.0, cam, 0.0)));
 		anotherCube.setScale(glm::vec3(s,s,s));
-		//aCamera.setPosition(glm::vec3(0.0f, 0.0f, -pos));
-		//aModel.setRotation(glm::quat(glm::vec3(cam, 0.0f, 0.0f)));
-		//sunLight.direction = glm::vec3(cos(cam), sin(cam), 0.0);
 		updateCamera(dt);
 		flip += dt;
 		if (flip > 5.0) {

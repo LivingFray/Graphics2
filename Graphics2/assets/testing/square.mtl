@@ -7,7 +7,7 @@ Kd 1.000000 1.000000 1.000000
 Ks 0.000000 0.000000 0.000000
 Tr 1.000000
 illum 1
-Ns 0.000000
+Ns 8.000000
 map_Kd starfield.png
 map_Ks tmpSpec.png
 norm tmpNorm.png
