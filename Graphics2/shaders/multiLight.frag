@@ -59,6 +59,8 @@ vec3 diffuseColour;
 vec3 specularColour;
 vec3 viewDir;
 
+int i;
+
 void main(){
 	//Calculate normal
 	//TODO: No normal map fix
@@ -77,12 +79,17 @@ void main(){
 	//Add emission
 	col3 += texture(emissionMap, texCoords).rgb;
 	//Add directional light
-	calcDirectional();
+	if(numDirLights!=0){
+		calcDirectional();
+	}
 	//Add point lights
-	
+	for(i=0;i<numPointLights;i++){
+		calcPointLight();
+	}
 	//Add spotlights
-	
-	//col3= texture(specular, texCoords).rgb;
+	for(i=0;i<numSpotLights;i++){
+		calcSpotLight();
+	}
 	color = vec4(col3, 1.0);
 }
 
@@ -96,9 +103,28 @@ void calcDirectional(){
 }
 
 void calcPointLight(){
-
+	vec3 lightDir = normalize(pointLights[i].position - fragmentPos);
+	//Blinn-Phong
+	vec3 halfDir = normalize(lightDir + viewDir);
+	float dist = length(pointLights[i].position - fragmentPos);
+	float attenuation = 1.0 / (pointLights[i].constant + pointLights[i].linear * dist + 
+    		    pointLights[i].quadratic * (dist * dist));  
+	float diff = max(dot(norm, lightDir), 0.0);
+	float spec = pow(max(dot(norm, halfDir), 0.0), shininess);
+	col3 += (diff * diffuseColour + spec * specularColour) * pointLights[i].colour * attenuation;
 }
 
 void calcSpotLight(){
-
+	vec3 lightDir = normalize(spotLights[i].position - fragmentPos);
+	//Blinn-Phong
+	vec3 halfDir = normalize(lightDir + viewDir);
+	float dist = length(spotLights[i].position - fragmentPos);
+	float attenuation = 1.0 / (spotLights[i].constant + spotLights[i].linear * dist + 
+    		    spotLights[i].quadratic * (dist * dist));
+	float theta = dot(lightDir, normalize(-spotLights[i].direction));
+	float epsilon = spotLights[i].cutOff - spotLights[i].outerCutOff;
+	float intensity = clamp((theta - spotLights[i].outerCutOff) / epsilon, 0.0, 1.0);
+	float diff = max(dot(norm, lightDir), 0.0);
+	float spec = pow(max(dot(norm, halfDir), 0.0), shininess);
+	col3 += (diff * diffuseColour + spec * specularColour) * spotLights[i].colour * attenuation * intensity;
 }

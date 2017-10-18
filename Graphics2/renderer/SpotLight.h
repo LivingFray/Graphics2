@@ -5,7 +5,7 @@ class SpotLight :
 public:
 	SpotLight();
 	~SpotLight();
-	void setScene(Scene * s);
+	void setScene(Scene* s);
 	glm::vec3 position;
 	glm::vec3 direction;
 	float cutOff;

@@ -101,7 +101,8 @@ void Scene::updateLights() {
 	glUniform3fv(glGetUniformLocation(program, "ambient"), 1, &ambientLight[0]);
 	//Update directional light
 	if (dirLight) {
-		glUniform3fv(glGetUniformLocation(program, "dirLight.direction"), 1, &dirLight->direction[0]);
+		glm::vec3 dir =glm::vec3(dirLight->getGlobalMatrix() * glm::vec4(dirLight->direction, 1.0f));
+		glUniform3fv(glGetUniformLocation(program, "dirLight.direction"), 1, &dir[0]);
 		glUniform3fv(glGetUniformLocation(program, "dirLight.colour"), 1, &dirLight->colour[0]);
 	}
 	glUniform1i(glGetUniformLocation(program, "numDirLights"), dirLight ? 1 : 0);
@@ -121,8 +122,9 @@ void Scene::updateLights() {
 	i = 0;
 	for (SpotLight* s : spotLights) {
 		glm::mat4 mat = s->getGlobalMatrix();
+		glm::vec3 dir = glm::vec3(glm::mat3(mat) * s->direction);
 		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].position").c_str()), 1, &mat[3][0]);
-		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].direction").c_str()), 1, &s->direction[0]);
+		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].direction").c_str()), 1, &dir[0]);
 		glUniform3fv(glGetUniformLocation(program, ("spotLights[" + std::to_string(i) + "].colour").c_str()), 1, &s->colour[0]);
 		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].quadratic").c_str()), s->quadratic);
 		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].linear").c_str()), s->linear);
@@ -131,5 +133,6 @@ void Scene::updateLights() {
 		glUniform1f(glGetUniformLocation(program,  ("spotLights[" + std::to_string(i) + "].outerCutOff").c_str()), s->outerCutOff);
 		i++;
 	}
+	glUniform1i(glGetUniformLocation(program, "numSpotLights"), spotLights.size());
 	glUseProgram(0);
 }

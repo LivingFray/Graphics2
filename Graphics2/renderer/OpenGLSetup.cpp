@@ -59,8 +59,7 @@ void OpenGLSetup::sharedInit() {
 	//New OpenGL only
 	glfwWindowHint(GLFW_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_VERSION_MINOR, 3);
-	//glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifdef __APPLE__
 	//Don't know why I bother with this, I doubt this compiles on apple anyway
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);

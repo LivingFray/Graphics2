@@ -79,10 +79,13 @@ void updateCamera(double dt) {
 
 int main() {
 	OpenGLSetup::init();
-	Cube anotherCube;
 	Scene aScene;
-	Model aModel;
+	Model floor, wallF, wallB, wallL, wallR;
 	DirectionalLight sunLight;
+	PointLight redLight;
+	PointLight blueLight;
+	SpotLight torch;
+	Cube rLightPos, bLightPos;
 	glfwSetWindowSizeCallback(OpenGLSetup::window, windowResized);
 	int w, h;
 	glfwGetWindowSize(OpenGLSetup::window, &w, &h);
@@ -96,18 +99,67 @@ int main() {
 		"assets/skybox/top.png", "assets/skybox/bottom.png",
 		"assets/skybox/back.png", "assets/skybox/front.png");
 	aCamera.setParent(&aScene);
-	anotherCube.setRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.78f)));
-	anotherCube.setParent(&aScene);
-	anotherCube.setPosition(glm::vec3(0.0, 1.0, 0.0));
-	anotherCube.setScale(glm::vec3(0.5, 0.5, 0.5));
-	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 6.0f));
-	aModel.setParent(&aScene);
-	assert(aModel.loadModel("assets/testing/square.obj"));
-	aModel.setRotation(glm::quat(glm::vec3(0.0, 0.78, 0.0)));
-	sunLight.direction = glm::vec3(0.0f, -1.0f, 0.0f);
-	sunLight.colour = glm::vec3(1.0, 1.0, 1.0);
+	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	floor.setParent(&aScene);
+	wallF.setParent(&aScene);
+	wallB.setParent(&aScene);
+	wallL.setParent(&aScene);
+	wallR.setParent(&aScene);
+	floor.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
+	wallF.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
+	wallB.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
+	wallL.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
+	wallR.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
+	assert(floor.loadModel("assets/testing/square.obj"));
+	assert(wallF.loadModel("assets/testing/square.obj"));
+	assert(wallB.loadModel("assets/testing/square.obj"));
+	assert(wallL.loadModel("assets/testing/square.obj"));
+	assert(wallR.loadModel("assets/testing/square.obj"));
+	floor.setRotation(glm::quat(glm::vec3(1.5708f, 0.0f, 0.0f)));
+	floor.setPosition(glm::vec3(0.0f, -16.0f, 0.0f));
+	wallF.setRotation(glm::quat(glm::vec3(0.0f, 3.1416f, 0.0f)));
+	wallF.setPosition(glm::vec3(0.0f, 0.0f, -16.0f));
+	wallB.setRotation(glm::quat(glm::vec3(0.0f, 0.0f, 0.0f)));
+	wallB.setPosition(glm::vec3(0.0f, 0.0f, 16.0f));
+	wallL.setRotation(glm::quat(glm::vec3(0.0f, 4.7124f, 0.0f)));
+	wallL.setPosition(glm::vec3(-16.0f, 0.0f, 0.0f));
+	wallR.setRotation(glm::quat(glm::vec3(0.0f, 1.5708f, 0.0f)));
+	wallR.setPosition(glm::vec3(16.0f, 0.0f, 0.0f));
+	//////Lighting
+	sunLight.direction = glm::vec3(-0.5f, -1.0f, 0.0f);
+	sunLight.colour = glm::vec3(1.0, 1.0, 1.0) * 0.4f;
 	sunLight.setParent(&aScene);
 	aScene.ambientLight = glm::vec3(0.2, 0.2, 0.2);
+	redLight.colour = glm::vec3(1.0, 0.0, 0.0);
+	redLight.constant = 1.0f;
+	redLight.linear = 0.22f;
+	redLight.quadratic = 0.02f;
+	redLight.setPosition(glm::vec3(-15.0, -15.0, -15.0));
+	redLight.setParent(&aScene);
+	rLightPos = Cube();
+	rLightPos.setPosition(redLight.getPosition());
+	rLightPos.setScale(glm::vec3(0.1f, 0.1f, 0.1f));
+	rLightPos.setParent(&aScene);
+	blueLight.setPosition(glm::vec3(0.0, 0.0, 0.0));
+	blueLight.colour = glm::vec3(0.0, 0.0, 1.0);
+	blueLight.constant = 1.0f;
+	blueLight.linear = 0.09f;
+	blueLight.quadratic = 0.032f;
+	blueLight.setParent(&aScene);
+	bLightPos = Cube();
+	bLightPos.setPosition(blueLight.getPosition());
+	bLightPos.setScale(glm::vec3(0.1f, 0.1f, 0.1f));
+	bLightPos.setParent(&aScene);
+	torch = SpotLight();
+	torch.colour = glm::vec3(1.0f, 1.0f, 1.0f);
+	torch.direction = glm::vec3(0.0f, 0.0f, -1.0f);
+	torch.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	torch.constant = 1.0f;
+	torch.linear = 0.022f;
+	torch.quadratic = 0.0019f;
+	torch.cutOff = glm::cos(glm::radians(10.0f));
+	torch.outerCutOff = glm::cos(glm::radians(15.0f));
+	torch.setParent(&aCamera);
 	glfwSetInputMode(OpenGLSetup::window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	double time = glfwGetTime();
 	double dt = 0.0;
@@ -117,8 +169,8 @@ int main() {
 	float s = 0.5f;
 	bool big = true;
 	float cam = 0.0f;
-	float flip = 0.0;
-	char state = 0;
+	//float flip = 0.0;
+	//char state = 0;
 	glfwSetCursorPos(OpenGLSetup::window,
 		static_cast<double>(w) / 2.0,
 		static_cast<double>(h) / 2.0
@@ -132,10 +184,12 @@ int main() {
 		//Update and draw
 		pos += static_cast<float>(dt);
 		if (big) {
+			//redLight.colour = glm::vec3(0.0, 0.0, 0.0);
 			s += static_cast<float>(dt);
 			big = s < 2.0f;
 			s = big ? s : 2.0f;
 		} else {
+			//redLight.colour = glm::vec3(1.0, 0.0, 0.0);
 			s -= static_cast<float>(dt);
 			big = s < 0.5f;
 			s = big ? 0.5f : s;
@@ -144,9 +198,12 @@ int main() {
 		if (cam > 6.28f) {
 			cam -= 6.28f;
 		}
-		aModel.setRotation(glm::quat(glm::vec3(0.0, cam, 0.0)));
-		anotherCube.setScale(glm::vec3(s,s,s));
+		//torch.setPosition(aCamera.getPosition());
+		//torch.direction = aCamera.getFront();
+		//redLight.setPosition(aCamera.getPosition());
+		//anotherCube.setScale(glm::vec3(s,s,s));
 		updateCamera(dt);
+		/*
 		flip += dt;
 		if (flip > 5.0) {
 			state++;
@@ -181,6 +238,7 @@ int main() {
 		default:
 			break;
 		}
+		*/
 		aCamera.render();
 		//FPS counter
 		frames++;

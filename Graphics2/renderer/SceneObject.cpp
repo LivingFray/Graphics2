@@ -120,15 +120,15 @@ glm::quat SceneObject::getRotation() {
 }
 
 glm::vec3 SceneObject::getFront() {
-	return glm::normalize(glm::vec3(localMat * glm::vec4(0.0, 0.0, -1.0, 1.0)));
+	return glm::normalize(glm::mat3(localMat) * glm::vec3(0.0, 0.0, -1.0));
 }
 
 glm::vec3 SceneObject::getUp() {
-	return glm::normalize(glm::vec3(localMat * glm::vec4(0.0, 1.0, 0.0, 1.0)));
+	return glm::normalize(glm::mat3(localMat) * glm::vec3(0.0, 1.0, 0.0));
 }
 
 glm::vec3 SceneObject::getRight() {
-	return glm::normalize(glm::vec3(localMat * glm::vec4(1.0, 0.0, 0.0, 1.0)));
+	return glm::normalize(glm::mat3(localMat) * glm::vec3(1.0, 0.0, 0.0));
 }
 
 glm::vec3 SceneObject::getGlobalPosition() {
@@ -140,6 +140,8 @@ void SceneObject::updateMatrix() {
 	if (this->parent) {
 		//Apply local transformation, then parent, then parent's parent, etc
 		this->globalMat = this->parent->getGlobalMatrix() * localMat;
+	} else {
+		this->globalMat = localMat;
 	}
 	//Update child matrices
 	for (SceneObject* o : this->getChildren()) {
