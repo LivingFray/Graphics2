@@ -75,6 +75,7 @@ bool Model::loadModel(const char* path) {
 		m->setEmission(OpenGLSetup::loadImage(baseDir + mat.emissive_texname));
 		m->setShininess(mat.shininess);
 		m->setParent(this);
+		m->setModel(this);
 	}
 	return true;
 }

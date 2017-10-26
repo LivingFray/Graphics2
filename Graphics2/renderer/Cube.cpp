@@ -69,19 +69,15 @@ Cube::~Cube() {
 	glDeleteVertexArrays(1, &vertexArray);
 }
 
-void Cube::render(Camera* c) {
+void Cube::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
 	//Use correct shaders
 	glUseProgram(shader.getProgram());
 	//Enable the VAO
 	glBindVertexArray(vertexArray);
 	//Pass matrices to shader
 	glUniformMatrix4fv(glGetUniformLocation(shader.getProgram(), "model"), 1, false, &(this->getGlobalMatrix())[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader.getProgram(), "view"), 1, false, &(c->getView())[0][0]);
-	glUniformMatrix4fv(glGetUniformLocation(shader.getProgram(), "projection"), 1, false, &(c->getProjection())[0][0]);
-	//Pass the camera position
-	//glUniform3fv(glGetUniformLocation(shader.getProgram(), "viewPos"), 1, &(c->getPosition())[0]);
-	//Pass the MVP matrix to the shaders
-	//glUniformMatrix4fv(mvpUniform, 1, false, &mvp[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader.getProgram(), "view"), 1, false, &(cam->getView())[0][0]);
+	glUniformMatrix4fv(glGetUniformLocation(shader.getProgram(), "projection"), 1, false, &(cam->getProjection())[0][0]);
 	//Draw the VAO
 	glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 }

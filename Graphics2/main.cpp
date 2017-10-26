@@ -13,17 +13,23 @@
 #define MOUSE_SPEED 0.005
 #define CAMERA_SPEED 0.05f
 
-Camera aCamera = Camera();
-
 double pitch, yaw;
+int newCamW = 0;
+int newCamH = 0;
 
 void windowResized(GLFWwindow* window, int width, int height) {
-	aCamera.setWidth(width);
-	aCamera.setHeight(height);
+	newCamW = width;
+	newCamH = height;
 	glViewport(0, 0, width, height);
 }
 
-void updateCamera(double dt) {
+void updateCamera(double dt, Camera &aCamera) {
+	if (newCamW && aCamera.getPerspective()) {
+		aCamera.setWidth(newCamW);
+		aCamera.setHeight(newCamH);
+		newCamW = 0;
+		newCamH = 0;
+	}
 	double mx, my;
 	int w, h;
 	glfwGetCursorPos(OpenGLSetup::window, &mx, &my);
@@ -79,6 +85,7 @@ void updateCamera(double dt) {
 
 int main() {
 	OpenGLSetup::init();
+	Camera aCamera;
 	Scene aScene;
 	Model floor, wallF, wallB, wallL, wallR;
 	DirectionalLight sunLight;
@@ -100,12 +107,13 @@ int main() {
 		"assets/skybox/back.png", "assets/skybox/front.png");
 	aCamera.setParent(&aScene);
 	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 0.0f));
+	aCamera.setFar(400.0f);
 	floor.setParent(&aScene);
 	wallF.setParent(&aScene);
 	wallB.setParent(&aScene);
 	wallL.setParent(&aScene);
 	wallR.setParent(&aScene);
-	floor.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
+	floor.setScale(glm::vec3(320.0f, 32.0f, 320.0f));
 	wallF.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
 	wallB.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
 	wallL.setScale(glm::vec3(32.0f, 32.0f, 32.0f));
@@ -126,10 +134,11 @@ int main() {
 	wallR.setRotation(glm::quat(glm::vec3(0.0f, 1.5708f, 0.0f)));
 	wallR.setPosition(glm::vec3(16.0f, 0.0f, 0.0f));
 	//////Lighting
-	sunLight.direction = glm::vec3(-0.5f, -1.0f, 0.0f);
+	sunLight.direction = glm::normalize(glm::vec3(0.0f, -1.0f, 2.0f));
 	sunLight.colour = glm::vec3(1.0, 1.0, 1.0) * 0.4f;
 	sunLight.setParent(&aScene);
-	aScene.ambientLight = glm::vec3(0.2, 0.2, 0.2);
+	//aScene.ambientLight = glm::vec3(0.2, 0.2, 0.2);
+	aScene.ambientLight = glm::vec3(0.0f, 0.0f, 0.0f);
 	redLight.colour = glm::vec3(1.0, 0.0, 0.0);
 	redLight.constant = 1.0f;
 	redLight.linear = 0.22f;
@@ -159,7 +168,8 @@ int main() {
 	torch.quadratic = 0.0019f;
 	torch.cutOff = glm::cos(glm::radians(10.0f));
 	torch.outerCutOff = glm::cos(glm::radians(15.0f));
-	torch.setParent(&aCamera);
+	//torch.setParent(&aCamera);
+
 	glfwSetInputMode(OpenGLSetup::window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	double time = glfwGetTime();
 	double dt = 0.0;
@@ -202,7 +212,7 @@ int main() {
 		//torch.direction = aCamera.getFront();
 		//redLight.setPosition(aCamera.getPosition());
 		//anotherCube.setScale(glm::vec3(s,s,s));
-		updateCamera(dt);
+		updateCamera(dt, aCamera);
 		/*
 		flip += dt;
 		if (flip > 5.0) {

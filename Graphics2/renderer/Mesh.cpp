@@ -19,10 +19,11 @@ Mesh::Mesh() {
 	glGenBuffers(1, &tangentBuffer);
 	glGenBuffers(1, &bitangentBuffer);
 	glUseProgram(program);
-	glUniform1i(glGetUniformLocation(program, "diffuse"), 0);
-	glUniform1i(glGetUniformLocation(program, "specular"), 1);
-	glUniform1i(glGetUniformLocation(program, "normalMap"), 2);
-	glUniform1i(glGetUniformLocation(program, "emissionMap"), 3);
+	glUniform1i(glGetUniformLocation(program, "shadow"), 0);
+	glUniform1i(glGetUniformLocation(program, "diffuse"), 1);
+	glUniform1i(glGetUniformLocation(program, "specular"), 2);
+	glUniform1i(glGetUniformLocation(program, "normalMap"), 3);
+	glUniform1i(glGetUniformLocation(program, "emissionMap"), 4);
 	glUseProgram(0);
 	shininess = 0;
 }
@@ -76,19 +77,21 @@ void Mesh::setMesh(vector<unsigned short> indices, vector<glm::vec3> vertices, v
 	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 }
 
-void Mesh::render(Camera* cam) {
+void Mesh::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
 	//Use correct shaders
 	glUseProgram(program);
 	//Enable the VAO
 	glBindVertexArray(vertexArray);
 	//Pass texture to shaders
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, diffuse);
+	glBindTexture(GL_TEXTURE_2D, depthMap);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, specular);
+	glBindTexture(GL_TEXTURE_2D, diffuse);
 	glActiveTexture(GL_TEXTURE2);
-	glBindTexture(GL_TEXTURE_2D, normal);
+	glBindTexture(GL_TEXTURE_2D, specular);
 	glActiveTexture(GL_TEXTURE3);
+	glBindTexture(GL_TEXTURE_2D, normal);
+	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, emission);
 	//Shininess
 	glUniform1f(glGetUniformLocation(program, "shininess"), shininess);
@@ -100,6 +103,17 @@ void Mesh::render(Camera* cam) {
 	glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, false, &(cam->getProjection())[0][0]);
 	//Pass the camera position
 	glUniform3fv(glGetUniformLocation(program, "viewPos"), 1, &(cam->getGlobalPosition())[0]);
+	//Shadows
+	glUniformMatrix4fv(glGetUniformLocation(program, "lightSpaceMatrix"), 1, false, &LSM[0][0]);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
+	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
+}
+
+void Mesh::renderShadow(GLuint p) {
+	//Enable the VAO
+	glBindVertexArray(vertexArray);
+	//Pass matrices to shader
+	glUniformMatrix4fv(glGetUniformLocation(p, "model"), 1, false, &(this->getGlobalMatrix())[0][0]);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
 }

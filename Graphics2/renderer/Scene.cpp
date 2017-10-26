@@ -93,9 +93,6 @@ void Scene::renderSkybox(Camera* c) {
 }
 
 void Scene::updateLights() {
-	//TODO: Apply transformations
-	//--Positions applied
-	//--Directions not applied
 	GLuint program = meshShader.getProgram();
 	glUseProgram(program);
 	glUniform3fv(glGetUniformLocation(program, "ambient"), 1, &ambientLight[0]);
@@ -135,4 +132,8 @@ void Scene::updateLights() {
 	}
 	glUniform1i(glGetUniformLocation(program, "numSpotLights"), spotLights.size());
 	glUseProgram(0);
+}
+
+DirectionalLight* Scene::getDirectionalLight() {
+	return dirLight;
 }

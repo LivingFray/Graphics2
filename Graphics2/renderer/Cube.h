@@ -8,7 +8,8 @@ class Cube :
 public:
 	Cube();
 	~Cube();
-	void render(Camera* c);
+	void render(Camera* cam, GLuint depthMap, glm::mat4 LSM);
+	void renderShadow(GLuint p) {};
 private:
 	std::vector<GLfloat> vertices;
 	GLuint vertexArray;

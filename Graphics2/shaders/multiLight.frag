@@ -47,6 +47,10 @@ uniform sampler2D specular;
 uniform sampler2D normalMap;
 uniform sampler2D emissionMap;
 
+//Shadows
+uniform sampler2D shadow;
+uniform mat4 lightSpaceMatrix;
+
 uniform vec3 viewPos;
 
 void calcDirectional();
@@ -60,6 +64,22 @@ vec3 specularColour;
 vec3 viewDir;
 
 int i;
+
+float calcShadow(vec3 lightDir){
+	//Perform calculation here because when multiple lights have shadows cant use vert
+	vec4 lPos = lightSpaceMatrix * vec4(fragmentPos, 1.0);
+	//Perform perspective transform
+	vec3 lPos3 = (lPos.xyz / lPos.w);
+	//Change range to [0,1]
+	lPos3 = lPos3 * 0.5 + 0.5;
+	float closestDepth = texture(shadow, lPos3.xy).r;
+	if(lPos3.z > 1.0){
+        return 0.0;
+	}
+	//Compare depth (with small bias) to shadowmap
+	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005);
+	return lPos3.z - bias > closestDepth ? 1.0 : 0.0;
+}
 
 void main(){
 	//Calculate normal
@@ -99,7 +119,8 @@ void calcDirectional(){
 	vec3 halfDir = normalize(lightDir + viewDir);
 	float diff = max(dot(norm, lightDir), 0.0);
 	float spec = pow(max(dot(norm, halfDir), 0.0), shininess);
-	col3 += (diff * diffuseColour + spec * specularColour) * dirLight.colour;
+	float shadow = calcShadow(lightDir);
+	col3 += (diff * diffuseColour + spec * specularColour) * dirLight.colour * (1.0 - shadow);
 }
 
 void calcPointLight(){

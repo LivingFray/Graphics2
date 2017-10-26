@@ -23,6 +23,7 @@ public:
 	void loadSkybox(string posX, string negX, string posY, string negY, string posZ, string negZ);
 	void renderSkybox(Camera* c);
 	void updateLights();
+	DirectionalLight* getDirectionalLight();
 	glm::vec3 ambientLight;
 private:
 	//Special rendering list

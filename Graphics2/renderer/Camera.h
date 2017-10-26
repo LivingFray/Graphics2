@@ -4,6 +4,7 @@ Cameras draw the scenes
 */
 #include "SceneObject.h"
 #include "OpenGLSetup.h"
+#include "Shader.h"
 class Camera :
 	public SceneObject {
 public:
@@ -41,6 +42,8 @@ public:
 	bool clearOnDraw;
 	// Renders the scene from the perspective of this camera
 	void render();
+	// Initialises the shadow map
+	void initShadowMap();
 private:
 	GLfloat width;
 	GLfloat height;
@@ -50,4 +53,9 @@ private:
 	bool perspective;
 	glm::mat4 proj;
 	bool updateFlag;
+	GLuint depthMap;
+	Shader shadow;
+	//TODO: In-game adjusting
+	unsigned int shadowMapSize = 1024;
+	GLuint fbo;
 };

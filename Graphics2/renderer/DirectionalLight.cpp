@@ -1,10 +1,11 @@
 #include "DirectionalLight.h"
 #include "Scene.h"
-
+/*
+IMPORTANT: Change shadows to be CSM so as to handle large scenes
+*/
 
 DirectionalLight::DirectionalLight() {
 }
-
 
 DirectionalLight::~DirectionalLight() {
 }
