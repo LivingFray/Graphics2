@@ -123,6 +123,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="terrain\Planet.cpp" />
     <ClCompile Include="renderer\Camera.cpp" />
     <ClCompile Include="renderer\Cube.cpp" />
     <ClCompile Include="renderer\DirectionalLight.cpp" />
@@ -138,6 +139,7 @@
     <ClCompile Include="renderer\SpotLight.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="terrain\Planet.h" />
     <ClInclude Include="renderer\Camera.h" />
     <ClInclude Include="renderer\Cube.h" />
     <ClInclude Include="renderer\DirectionalLight.h" />
