@@ -4,8 +4,8 @@
 //For testing use low LOD
 #define NODES_EXP 3
 #define NUM_NODES (1 << NODES_EXP) + 1
-#define MIN_Y 0.0
-#define MAX_Y 2.0
+#define MIN_Y (-0.5)
+#define MAX_Y 0.5
 
 #define FACE_POS_X 0
 #define FACE_NEG_X 1
@@ -14,8 +14,6 @@
 #define FACE_POS_Z 4
 #define FACE_NEG_Z 5
 
-
-//TODO: Scale independant of nodes
 
 Planet::Planet() {
 }
@@ -74,6 +72,7 @@ void Planet::generateTerrain() {
 	//Centre planet on 0,0,0 (model space)
 	float halfNodes = static_cast<float>(NUM_NODES - 1) / 2.0f;
 	glm::mat4 pos = glm::translate(glm::mat4(1), glm::vec3(-halfNodes, halfNodes, -halfNodes));
+	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.0f / (NUM_NODES - 1)));
 	//These transformations got somewhat out of hand...
 	glm::mat4 faceTrans[6];
 
@@ -96,11 +95,11 @@ void Planet::generateTerrain() {
 				if (x > 0) {
 					if (y > 0) {
 						//Pos
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x, faces[f][x][y], y, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x, y, f));
 						//Negative Y
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x, faces[f][x][y - 1], y - 1, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x, y - 1, f));
 						//Negative X
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x - 1, faces[f][x - 1][y], y, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x - 1, y, f));
 						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
 						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y - 1) / (NUM_NODES)));
 						uv.push_back(glm::vec2(static_cast<float>(x - 1) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
@@ -110,11 +109,11 @@ void Planet::generateTerrain() {
 					}
 					if (y < NUM_NODES - 1) {
 						//Pos
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x, faces[f][x][y], y, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x, y, f));
 						//Negative X
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x - 1, faces[f][x - 1][y], y, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x - 1, y, f));
 						//Positive Y
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x, faces[f][x][y + 1], y + 1, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x, y + 1, f));
 						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
 						uv.push_back(glm::vec2(static_cast<float>(x - 1) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
 						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y + 1) / (NUM_NODES)));
@@ -124,15 +123,15 @@ void Planet::generateTerrain() {
 
 					}
 				}
-				if (x<NUM_NODES - 1) {
+				if (x < NUM_NODES - 1) {
 					//Neighbours to the -y
-					if (y>0) {
+					if (y > 0) {
 						//Pos
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x, faces[f][x][y], y, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x, y, f));
 						//Positive X
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x + 1, faces[f][x + 1][y], y, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x + 1, y, f));
 						//Negative Y
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x, faces[f][x][y - 1], y - 1, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x, y - 1, f));
 						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
 						uv.push_back(glm::vec2(static_cast<float>(x + 1) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
 						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y - 1) / (NUM_NODES)));
@@ -141,13 +140,13 @@ void Planet::generateTerrain() {
 						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
 					}
 					//Neighbours to the +y
-					if (y<NUM_NODES - 1) {
+					if (y < NUM_NODES - 1) {
 						//Pos
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x, faces[f][x][y], y, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x, y, f));
 						//Positive Y
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x, faces[f][x][y + 1], y + 1, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x, y + 1, f));
 						//Positive X
-						vert.push_back(glm::vec3(faceTrans[f] * glm::vec4(x + 1, faces[f][x + 1][y], y, 1.0f)));
+						vert.push_back(getVertex(scale * faceTrans[f], x + 1, y, f));
 						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
 						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y + 1) / (NUM_NODES)));
 						uv.push_back(glm::vec2(static_cast<float>(x + 1) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
@@ -286,4 +285,14 @@ void Planet::setNode(float value, unsigned int face, unsigned int x, unsigned in
 			faces[FACE_POS_Y][NUM_NODES - 1][NUM_NODES - 1 - x] = value;
 		}
 	}
+}
+
+glm::vec3 Planet::getVertex(glm::mat4 trans, int x, int y, int face) {
+	//Get position on sphere
+	glm::vec3 p = glm::vec3(trans * glm::vec4(x, 0.0f, y, 1.0f));
+	p = glm::normalize(p);
+	//Extrude by heightmap
+	float height = 1.0 + faces[face][x][y];
+	p = p * height;
+	return p;
 }
