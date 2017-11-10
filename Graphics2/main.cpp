@@ -13,7 +13,7 @@
 #include "terrain\Planet.h"
 
 #define MOUSE_SPEED 0.005
-#define CAMERA_SPEED 0.05f
+#define CAMERA_SPEED 0.00005f
 
 double pitch, yaw;
 int newCamW = 0;
@@ -105,7 +105,7 @@ int main() {
 		"assets/skybox/top.png", "assets/skybox/bottom.png",
 		"assets/skybox/back.png", "assets/skybox/front.png");
 	aCamera.setParent(&aScene);
-	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 8.0f));
+	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 2.0f));
 	aCamera.setFar(400.0f);
 	planet.generateTerrain();
 	planet.planet.setDiffuse(OpenGLSetup::loadImage("assets/testing/starfield.png"));
