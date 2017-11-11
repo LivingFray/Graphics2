@@ -471,20 +471,28 @@ void Planet::addTriangle(int f, unsigned int xs[], unsigned int ys[]) {
 	}
 	//If any point is below sea level add all to sea (setting height to sea level)
 	if (addSea) {
+		glm::vec3 v[3];
 		for (int i = 0; i < 3; i++) {
-			seaVert.push_back(getVertex(faceTrans[f], xs[i], ys[i], f, HEIGHT_SEA));
+			v[i] = getVertex(faceTrans[f], xs[i], ys[i], f, HEIGHT_SEA);
+			seaVert.push_back(v[i]);
 			seaUv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-			//TODO: Fix this
-			seaNorm.push_back(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		}
+		glm::vec3 n = glm::normalize(glm::cross(v[1] - v[0], v[2] - v[0]));
+		for (int i = 0; i < 3; i++) {
+			seaNorm.push_back(n);
 		}
 	}
 	//If any point is above sea level add to land
 	if (addLand) {
+		glm::vec3 v[3];
 		for (int i = 0; i < 3; i++) {
-			vert.push_back(getVertex(faceTrans[f], xs[i], ys[i], f));
+			v[i] = getVertex(faceTrans[f], xs[i], ys[i], f);
+			vert.push_back(v[i]);
 			uv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-			//TODO: Fix this
-			norm.push_back(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		}
+		glm::vec3 n = glm::normalize(glm::cross(v[1] - v[0], v[2] - v[0]));
+		for (int i = 0; i < 3; i++) {
+			norm.push_back(n);
 		}
 	}
 }

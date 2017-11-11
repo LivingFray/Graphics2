@@ -106,7 +106,8 @@ int main() {
 		"assets/skybox/back.png", "assets/skybox/front.png");
 	aCamera.setParent(&aScene);
 	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 2.0f));
-	aCamera.setFar(400.0f);
+	aCamera.setNear(0.01f);
+	aCamera.setFar(10.0f);
 	planet.seed = 0;
 	planet.generateTerrain();
 	planet.planet.setDiffuse(OpenGLSetup::loadImage("assets/testing/grass.png"));
