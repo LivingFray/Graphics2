@@ -1,6 +1,7 @@
 #include "Planet.h"
 #include <random>
 #include "../renderer/glm/gtc/matrix_transform.hpp"
+//Generator settings
 //For testing use low LOD
 #define NODES_EXP 4
 #define NUM_NODES (1 << NODES_EXP) + 1
@@ -8,13 +9,16 @@
 #define MAX_Y 0.15
 #define ROUGHNESS 1.0
 
+//Biome settings
+#define HEIGHT_SEA 0.0
+
+//Enums for the face of the planet
 #define FACE_POS_X 0
 #define FACE_NEG_X 1
 #define FACE_POS_Y 2
 #define FACE_NEG_Y 3
 #define FACE_POS_Z 4
 #define FACE_NEG_Z 5
-
 
 Planet::Planet() {
 }
@@ -35,7 +39,7 @@ x=0,y=0 is bottom left
 
 void Planet::generateTerrain() {
 	std::uniform_real_distribution<float> uni(MIN_Y, MAX_Y);
-	std::default_random_engine rng;
+	std::default_random_engine rng(seed);
 	//Generate Vectors to hold data
 	for (unsigned int f = 0; f < 6; f++) {
 		//For each face
@@ -106,26 +110,19 @@ void Planet::generateTerrain() {
 		size = size / 2;
 	}
 	//Convert to mesh (temp?)
-	std::vector<glm::vec3> vert;
-	std::vector<glm::vec2> uv;
-	std::vector<glm::vec3> norm;
-	std::vector<glm::vec3> tan;
-	std::vector<glm::vec3> bitan;
 
 	//Transformations to apply to each face
 	//Centre planet on 0,0,0 (model space)
 	float halfNodes = static_cast<float>(NUM_NODES - 1) / 2.0f;
 	glm::mat4 pos = glm::translate(glm::mat4(1), glm::vec3(-halfNodes, halfNodes, -halfNodes));
 	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.0f / (NUM_NODES - 1)));
-	//These transformations got somewhat out of hand...
-	glm::mat4 faceTrans[6];
 
-	faceTrans[FACE_POS_X] = glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_NEG_X] = glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * pos;
-	faceTrans[FACE_POS_Y] = glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_NEG_Y] = glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_POS_Z] = glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_NEG_Z] = glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_POS_X] = scale * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_NEG_X] = scale * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * pos;
+	faceTrans[FACE_POS_Y] = scale * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_NEG_Y] = scale * glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_POS_Z] = scale * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_NEG_Z] = scale *  glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
 
 	/*
 	For each face generate face
@@ -136,74 +133,66 @@ void Planet::generateTerrain() {
 	for (int f = 0; f < 6; f++) {
 		for (unsigned int y = 0; y < NUM_NODES; y++) {
 			for (unsigned int x = y % 2; x < NUM_NODES; x += 2) {
+				unsigned int xs[3];
+				unsigned int ys[3];
 				if (x > 0) {
 					if (y > 0) {
 						//Pos
-						vert.push_back(getVertex(scale * faceTrans[f], x, y, f));
+						xs[0] = x;
+						ys[0] = y;
 						//Negative Y
-						vert.push_back(getVertex(scale * faceTrans[f], x, y - 1, f));
+						xs[1] = x;
+						ys[1] = y - 1;
 						//Negative X
-						vert.push_back(getVertex(scale * faceTrans[f], x - 1, y, f));
-						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
-						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y - 1) / (NUM_NODES)));
-						uv.push_back(glm::vec2(static_cast<float>(x - 1) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
+						xs[2] = x - 1;
+						ys[2] = y;
+						addTriangle(f, xs, ys);
 					}
 					if (y < NUM_NODES - 1) {
 						//Pos
-						vert.push_back(getVertex(scale * faceTrans[f], x, y, f));
+						xs[0] = x;
+						ys[0] = y;
 						//Negative X
-						vert.push_back(getVertex(scale * faceTrans[f], x - 1, y, f));
+						xs[1] = x - 1;
+						ys[1] = y;
 						//Positive Y
-						vert.push_back(getVertex(scale * faceTrans[f], x, y + 1, f));
-						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
-						uv.push_back(glm::vec2(static_cast<float>(x - 1) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
-						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y + 1) / (NUM_NODES)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-
+						xs[2] = x;
+						ys[2] = y + 1;
+						addTriangle(f, xs, ys);
 					}
 				}
 				if (x < NUM_NODES - 1) {
 					//Neighbours to the -y
 					if (y > 0) {
 						//Pos
-						vert.push_back(getVertex(scale * faceTrans[f], x, y, f));
+						xs[0] = x;
+						ys[0] = y;
 						//Positive X
-						vert.push_back(getVertex(scale * faceTrans[f], x + 1, y, f));
+						xs[1] = x + 1;
+						ys[1] = y;
 						//Negative Y
-						vert.push_back(getVertex(scale * faceTrans[f], x, y - 1, f));
-						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
-						uv.push_back(glm::vec2(static_cast<float>(x + 1) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
-						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y - 1) / (NUM_NODES)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
+						xs[2] = x;
+						ys[2] = y - 1;
+						addTriangle(f, xs, ys);
 					}
 					//Neighbours to the +y
 					if (y < NUM_NODES - 1) {
 						//Pos
-						vert.push_back(getVertex(scale * faceTrans[f], x, y, f));
+						xs[0] = x;
+						ys[0] = y;
 						//Positive Y
-						vert.push_back(getVertex(scale * faceTrans[f], x, y + 1, f));
+						xs[1] = x;
+						ys[1] = y + 1;
 						//Positive X
-						vert.push_back(getVertex(scale * faceTrans[f], x + 1, y, f));
-						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
-						uv.push_back(glm::vec2(static_cast<float>(x) / (NUM_NODES), static_cast<float>(y + 1) / (NUM_NODES)));
-						uv.push_back(glm::vec2(static_cast<float>(x + 1) / (NUM_NODES), static_cast<float>(y) / (NUM_NODES)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
-						norm.push_back(glm::vec3(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f)));
+						xs[2] = x + 1;
+						ys[2] = y;
+						addTriangle(f, xs, ys);
 					}
 				}
-				//TODO: Fix uv and normals
 			}
 		}
 	}
-
+	//Land
 	std::vector<unsigned short> ind;
 	std::vector<glm::vec3> o_vert;
 	std::vector<glm::vec2> o_uv;
@@ -216,6 +205,13 @@ void Planet::generateTerrain() {
 	Model::indexVBO(vert, uv, norm, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 	//Set mesh
 	planet.setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	//Sea
+	//Calculate tangent + bitangent
+	Model::computeTangentBasis(seaVert, seaUv, seaNorm, seaTan, seaBitan);
+	//Index vertices
+	Model::indexVBO(seaVert, seaUv, seaNorm, seaTan, seaBitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	//Set mesh
+	water.setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 }
 
 void Planet::setNode(float value, unsigned int face, unsigned int x, unsigned int y) {
@@ -452,4 +448,43 @@ glm::vec3 Planet::getVertex(glm::mat4 trans, int x, int y, int face) {
 	float height = 1.0f + faces[face][x][y];
 	p = p * height;
 	return p;
+}
+
+glm::vec3 Planet::getVertex(glm::mat4 trans, int x, int y, int face, float height) {
+	//Get position on sphere
+	glm::vec3 p = glm::vec3(trans * glm::vec4(x, 0.0f, y, 1.0f));
+	p = glm::normalize(p);
+	//Extrude by heightmap
+	p = p * (height + 1.0f);
+	return p;
+}
+
+void Planet::addTriangle(int f, unsigned int xs[], unsigned int ys[]) {
+	bool addSea = false;
+	bool addLand = false;
+	for (int i = 0; i < 3; i++) {
+		if (faces[f][xs[i]][ys[i]] < HEIGHT_SEA) {
+			addSea = true;
+		} else {
+			addLand = true;
+		}
+	}
+	//If any point is below sea level add all to sea (setting height to sea level)
+	if (addSea) {
+		for (int i = 0; i < 3; i++) {
+			seaVert.push_back(getVertex(faceTrans[f], xs[i], ys[i], f, HEIGHT_SEA));
+			seaUv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			//TODO: Fix this
+			seaNorm.push_back(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		}
+	}
+	//If any point is above sea level add to land
+	if (addLand) {
+		for (int i = 0; i < 3; i++) {
+			vert.push_back(getVertex(faceTrans[f], xs[i], ys[i], f));
+			uv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			//TODO: Fix this
+			norm.push_back(faceTrans[f] * glm::vec4(0.0f, 0.0f, 1.0f, 1.0f));
+		}
+	}
 }
