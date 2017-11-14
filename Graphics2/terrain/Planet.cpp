@@ -3,14 +3,14 @@
 #include "../renderer/glm/gtc/matrix_transform.hpp"
 //Generator settings
 //For testing use low LOD
-#define NODES_EXP 4
+#define NODES_EXP 5
 #define NUM_NODES (1 << NODES_EXP) + 1
 #define MIN_Y (-0.15)
 #define MAX_Y 0.15
 #define ROUGHNESS 1.0
 
 //Biome settings
-#define HEIGHT_SEA 0.0
+#define HEIGHT_SEA 0.05
 
 //Enums for the face of the planet
 #define FACE_POS_X 0
@@ -122,7 +122,7 @@ void Planet::generateTerrain() {
 	faceTrans[FACE_POS_Y] = scale * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
 	faceTrans[FACE_NEG_Y] = scale * glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
 	faceTrans[FACE_POS_Z] = scale * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_NEG_Z] = scale *  glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_NEG_Z] = scale * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
 
 	/*
 	For each face generate face
@@ -204,14 +204,20 @@ void Planet::generateTerrain() {
 	//Index vertices
 	Model::indexVBO(vert, uv, norm, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 	//Set mesh
-	planet.setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	if (ind.size() > 0) {
+		planet.setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+		planet.useNormalTexture = false;
+	}
 	//Sea
 	//Calculate tangent + bitangent
 	Model::computeTangentBasis(seaVert, seaUv, seaNorm, seaTan, seaBitan);
 	//Index vertices
 	Model::indexVBO(seaVert, seaUv, seaNorm, seaTan, seaBitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 	//Set mesh
-	water.setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	if (ind.size() > 0) {
+		water.setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+		water.useNormalTexture = false;
+	}
 }
 
 void Planet::setNode(float value, unsigned int face, unsigned int x, unsigned int y) {
@@ -476,11 +482,12 @@ void Planet::addTriangle(int f, unsigned int xs[], unsigned int ys[]) {
 			v[i] = getVertex(faceTrans[f], xs[i], ys[i], f, HEIGHT_SEA);
 			seaVert.push_back(v[i]);
 			seaUv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			seaNorm.push_back(glm::normalize(v[i]));
 		}
-		glm::vec3 n = glm::normalize(glm::cross(v[1] - v[0], v[2] - v[0]));
-		for (int i = 0; i < 3; i++) {
-			seaNorm.push_back(n);
-		}
+		//glm::vec3 n = glm::normalize(glm::cross(v[2] - v[0], v[1] - v[0]));
+		//for (int i = 0; i < 3; i++) {
+		//	seaNorm.push_back(n);
+		//}
 	}
 	//If any point is above sea level add to land
 	if (addLand) {
@@ -489,10 +496,11 @@ void Planet::addTriangle(int f, unsigned int xs[], unsigned int ys[]) {
 			v[i] = getVertex(faceTrans[f], xs[i], ys[i], f);
 			vert.push_back(v[i]);
 			uv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			norm.push_back(glm::normalize(v[i]));
 		}
-		glm::vec3 n = glm::normalize(glm::cross(v[1] - v[0], v[2] - v[0]));
-		for (int i = 0; i < 3; i++) {
-			norm.push_back(n);
-		}
+		//glm::vec3 n = glm::normalize(glm::cross(v[2] - v[0], v[1] - v[0]));
+		//for (int i = 0; i < 3; i++) {
+		//	norm.push_back(n);
+		//}
 	}
 }

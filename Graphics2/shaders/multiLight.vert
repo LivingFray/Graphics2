@@ -11,6 +11,7 @@ uniform mat4 projection;
 uniform mat3 transInvModel;
 
 out mat3 TBN;
+out vec3 normVec;
 out vec2 texCoords;
 out vec3 fragmentPos;
 
@@ -24,6 +25,7 @@ void main(){
 	vec3 B = normalize(vec3(transInvModel * vertexBitangent));
 	vec3 N = normalize(vec3(transInvModel * vertexNormal));
 	TBN = mat3(T,B,N);
+	normVec = N;
 	//Calculate position of fragment in world space
 	fragmentPos = vec3(model * vec4(vertexPosition, 1.0));
 }

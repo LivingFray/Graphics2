@@ -13,7 +13,7 @@
 #include "terrain\Planet.h"
 
 #define MOUSE_SPEED 0.005
-#define CAMERA_SPEED 0.00005f
+#define CAMERA_SPEED 1.0f
 
 double pitch, yaw;
 int newCamW = 0;
@@ -66,7 +66,7 @@ void updateCamera(double dt, Camera &aCamera) {
 		cos(yaw) * cos(pitch)
 	);
 	glm::normalize(front);
-	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);//aCamera.getUp();
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	glm::vec3 right = glm::normalize(glm::cross(up, front));
 
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_I)) {
@@ -90,6 +90,8 @@ int main() {
 	Camera aCamera;
 	Scene aScene;
 	DirectionalLight sunLight;
+	//PointLight point;
+	//SpotLight torch;
 
 	Planet planet;
 	glfwSetWindowSizeCallback(OpenGLSetup::window, windowResized);
@@ -105,29 +107,37 @@ int main() {
 		"assets/skybox/top.png", "assets/skybox/bottom.png",
 		"assets/skybox/back.png", "assets/skybox/front.png");
 	aCamera.setParent(&aScene);
-	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 2.0f));
-	aCamera.setNear(0.01f);
-	aCamera.setFar(10.0f);
+	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 1200.0f));
+	aCamera.setNear(0.1f);
+	aCamera.setFar(10000.0f);
 	planet.seed = 0;
 	planet.generateTerrain();
 	planet.planet.setDiffuse(OpenGLSetup::loadImage("assets/testing/grass.png"));
 	planet.planet.setSpecular(0);
 	planet.planet.setNormal(0);
 	planet.planet.setEmission(0);
+	planet.planet.setScale(glm::vec3(1000.0f));
 	planet.planet.setParent(&aScene);
 	planet.water.setDiffuse(OpenGLSetup::loadImage("assets/testing/water.png"));
 	planet.water.setSpecular(0);
 	planet.water.setNormal(0);
 	planet.water.setEmission(0);
+	planet.water.setScale(glm::vec3(1000.0f));
 	planet.water.setParent(&aScene);
 	Cube forScale;
 	forScale.setPosition(glm::vec3(0.0f, 2.0f, 0.0f));
 	forScale.setParent(&aScene);
 	//////Lighting
-	sunLight.direction = glm::normalize(glm::vec3(0.0f, -1.0f, 2.0f));
+	sunLight.direction = glm::normalize(glm::vec3(0.0f, -1.0f, -1.0f));
 	sunLight.colour = glm::vec3(1.0f, 1.0f, 1.0f) * 0.4f;
 	sunLight.setParent(&aScene);
-	aScene.ambientLight = glm::vec3(0.2, 0.2, 0.2) * 5.0f;
+	//point.setParent(&aCamera);
+	//point.colour = glm::vec3(1.0f, 1.0f, 1.0f);
+	//point.constant = 1.0f;
+	//point.linear = 0.0014f;
+	//point.quadratic = 0.000007f;
+	//point.position = glm::vec3(0.0f, 0.0f, 0.0f);
+	aScene.ambientLight = glm::vec3(0.2, 0.2, 0.2); //* 5.0f;
 	//aScene.ambientLight = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	glfwSetInputMode(OpenGLSetup::window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);

@@ -93,6 +93,8 @@ void Mesh::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
 	glBindTexture(GL_TEXTURE_2D, normal);
 	glActiveTexture(GL_TEXTURE4);
 	glBindTexture(GL_TEXTURE_2D, emission);
+	//Whether or not to use the normal map
+	glUniform1i(glGetUniformLocation(program, "useNormalTexture"), useNormalTexture);
 	//Shininess
 	glUniform1f(glGetUniformLocation(program, "shininess"), shininess);
 	//Pass matrices to shader

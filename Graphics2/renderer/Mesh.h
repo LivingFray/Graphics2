@@ -38,6 +38,7 @@ public:
 	string getName() { return name; };
 	// Sets the model the mesh belongs to
 	void setModel(Model* m);
+	bool useNormalTexture;
 private:
 	vector<unsigned short> indices;
 	vector<glm::vec3> vertices;

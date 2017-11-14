@@ -5,6 +5,7 @@
 in mat3 TBN;
 in vec2 texCoords;
 in vec3 fragmentPos;
+in vec3 normVec;
 
 out vec4 color;
 
@@ -53,6 +54,8 @@ uniform mat4 lightSpaceMatrix;
 
 uniform vec3 viewPos;
 
+uniform bool useNormalTexture;
+
 void calcDirectional();
 void calcPointLight();
 void calcSpotLight();
@@ -83,14 +86,14 @@ float calcShadow(vec3 lightDir){
 
 void main(){
 	//Calculate normal
-	//TODO: No normal map fix
-	//Move into correct range
-	norm = normalize(texture(normalMap, texCoords).rgb * 2.0 - 1.0);
-	if(textureSize(normalMap, 0).x == 0) {
-		norm = vec3(0.0, 0.0, 1.0);
+	if(useNormalTexture) {
+		//Move into correct range
+		norm = normalize(texture(normalMap, texCoords).rgb * 2.0 - 1.0);
+		//Transform to world space
+		norm = normalize(TBN * norm);
+	} else {
+		norm = normVec;
 	}
-	//Transform to world space
-	norm = normalize(TBN * norm);
 	//Calculate View Directional
 	viewDir = normalize(viewPos - fragmentPos);
 	//Calculate texture colours
