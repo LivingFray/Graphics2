@@ -14,7 +14,7 @@ public:
 			for (int f = 0; f < 6; f++) {
 				for (int gx = 0; gx < LODS[l][f].size(); gx++) {
 					for (int gy = 0; gy < LODS[l][f][gx].size(); gy++) {
-						PlanetMeshes meshes = LODS[l][f][0][0];//LODS[l][f][gx][gy];
+						PlanetMeshes meshes = LODS[l][f][gx][gy];
 						if (meshes.sea) {
 							meshes.sea->setParent(p);
 							meshes.sea->setPosition(glm::vec3(l * 10.0f, 0.0f, 0.0f));

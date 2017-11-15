@@ -171,8 +171,10 @@ inline void Planet::createTransformations() {
 
 inline void Planet::generateGrid(int l, int f, int minX, int minY, int maxX, int maxY) {
 	int step = 1 << l;
-	for (int y = 0; y <= maxY - minY; y++) {
-		for (int x = y % 2; x <= maxX - minX; x += 2) {
+	int nodesX = (maxX - minX) / step;
+	int nodesY = (maxY - minY) / step;
+	for (int y = 0; y <= nodesY; y++) {
+		for (int x = y % 2; x <= nodesX; x += 2) {
 			//Transform (x,y) to correct LOD
 			int lX = x * step + minX;
 			int lY = y * step + minY;
@@ -191,7 +193,7 @@ inline void Planet::generateGrid(int l, int f, int minX, int minY, int maxX, int
 					ys[2] = lY;
 					addTriangle(l, f, xs, ys);
 				}
-				if (y < maxY - minY) {
+				if (y < nodesY) {
 					//Pos
 					xs[0] = lX;
 					ys[0] = lY;
@@ -204,7 +206,7 @@ inline void Planet::generateGrid(int l, int f, int minX, int minY, int maxX, int
 					addTriangle(l, f, xs, ys);
 				}
 			}
-			if (x < maxX - minX) {
+			if (x < nodesX) {
 				//Neighbours to the -y
 				if (y > 0) {
 					//Pos
@@ -219,7 +221,7 @@ inline void Planet::generateGrid(int l, int f, int minX, int minY, int maxX, int
 					addTriangle(l, f, xs, ys);
 				}
 				//Neighbours to the +y
-				if (y < maxY - minY) {
+				if (y < nodesY) {
 					//Pos
 					xs[0] = lX;
 					ys[0] = lY;
