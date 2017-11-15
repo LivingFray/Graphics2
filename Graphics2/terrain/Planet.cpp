@@ -262,9 +262,9 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	std::vector<glm::vec3> o_tan;
 	std::vector<glm::vec3> o_bitan;
 	//Calculate tangent + bitangent
-	Model::computeTangentBasis(vert_sea, uv, norm, tan, bitan);
+	Model::computeTangentBasis(vert_sea, uv_sea, norm_sea, tan, bitan);
 	//Index vertices
-	Model::indexVBO(vert_sea, uv, norm, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	Model::indexVBO(vert_sea, uv_sea, norm_sea, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 	//Set mesh
 	if (ind.size() > 0) {
 		Mesh* m = new Mesh();
@@ -276,6 +276,8 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	}
 	ind.clear();
 	vert_sea.clear();
+	uv_sea.clear();
+	norm_sea.clear();
 	tan.clear();
 	bitan.clear();
 	o_vert.clear();
@@ -284,9 +286,9 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	o_tan.clear();
 	o_bitan.clear();
 	//Calculate tangent + bitangent
-	Model::computeTangentBasis(vert_land, uv, norm, tan, bitan);
+	Model::computeTangentBasis(vert_land, uv_land, norm_land, tan, bitan);
 	//Index vertices
-	Model::indexVBO(vert_land, uv, norm, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	Model::indexVBO(vert_land, uv_land, norm_land, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 	//Set mesh
 	if (ind.size() > 0) {
 		Mesh* m = new Mesh();
@@ -298,6 +300,8 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	}
 	ind.clear();
 	vert_land.clear();
+	uv_land.clear();
+	norm_land.clear();
 	tan.clear();
 	bitan.clear();
 	o_vert.clear();
@@ -306,9 +310,9 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	o_tan.clear();
 	o_bitan.clear();
 	//Calculate tangent + bitangent
-	Model::computeTangentBasis(vert_rock, uv, norm, tan, bitan);
+	Model::computeTangentBasis(vert_rock, uv_rock, norm_rock, tan, bitan);
 	//Index vertices
-	Model::indexVBO(vert_rock, uv, norm, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	Model::indexVBO(vert_rock, uv_rock, norm_rock, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 	//Set mesh
 	if (ind.size() > 0) {
 		Mesh* m = new Mesh();
@@ -320,8 +324,8 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	}
 	ind.clear();
 	vert_rock.clear();
-	uv.clear();
-	norm.clear();
+	uv_rock.clear();
+	norm_rock.clear();
 	tan.clear();
 	bitan.clear();
 	o_vert.clear();
@@ -582,23 +586,27 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 	bool addSea = false;
 	bool addLand = false;
 	bool addRock = false;
+	//Count how many vertices are land height(-) and how many are rock height(+)
+	int landVsRock = 0;
 	for (int i = 0; i < 3; i++) {
 		float h = getNode(f, xs[i], ys[i]);
 		if (h < HEIGHT_SEA) {
 			addSea = true;
 		} else if(h > HEIGHT_ROCK) {
-			addRock = true;
+			landVsRock++;
 		} else {
-			addLand = true;
+			landVsRock--;
 		}
 	}
+	addLand = landVsRock <= 0;
+	addRock = landVsRock > 0;
 	//If any point is below sea level add all to sea (setting height to sea level)
 	if (addSea) {
 		for (int i = 0; i < 3; i++) {
 			glm::vec3 v = getVertex(xs[i], ys[i], f, HEIGHT_SEA);
 			vert_sea.push_back(v);
-			uv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-			norm.push_back(glm::normalize(v));
+			uv_sea.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			norm_sea.push_back(glm::normalize(v));
 		}
 	}
 	//If any point is above sea level add to land
@@ -606,8 +614,8 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 		for (int i = 0; i < 3; i++) {
 			glm::vec3 v = getVertex(xs[i], ys[i], f);
 			vert_land.push_back(v);
-			uv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-			norm.push_back(glm::normalize(v));
+			uv_land.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			norm_land.push_back(glm::normalize(v));
 		}
 	}
 	//If any point is a mountain add to rock
@@ -615,8 +623,8 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 		for (int i = 0; i < 3; i++) {
 			glm::vec3 v = getVertex(xs[i], ys[i], f);
 			vert_rock.push_back(v);
-			uv.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-			norm.push_back(glm::normalize(v));
+			uv_rock.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			norm_rock.push_back(glm::normalize(v));
 		}
 	}
 }

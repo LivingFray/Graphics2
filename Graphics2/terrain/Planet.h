@@ -60,9 +60,13 @@ private:
 	std::vector<glm::vec3> vert_sea;
 	std::vector<glm::vec3> vert_land;
 	std::vector<glm::vec3> vert_rock;
+	std::vector<glm::vec2> uv_sea;
+	std::vector<glm::vec2> uv_land;
+	std::vector<glm::vec2> uv_rock;
+	std::vector<glm::vec3> norm_sea;
+	std::vector<glm::vec3> norm_land;
+	std::vector<glm::vec3> norm_rock;
 	//Companion information for vertices
-	std::vector<glm::vec2> uv;
-	std::vector<glm::vec3> norm;
 	std::vector<glm::vec3> tan;
 	std::vector<glm::vec3> bitan;
 
