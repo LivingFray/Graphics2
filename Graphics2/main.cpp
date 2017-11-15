@@ -25,7 +25,7 @@ void windowResized(GLFWwindow* window, int width, int height) {
 	glViewport(0, 0, width, height);
 }
 
-void updateCamera(double dt, Camera &aCamera) {
+void updateCamera(float dt, Camera &aCamera) {
 	if (newCamW && aCamera.getPerspective()) {
 		aCamera.setWidth(newCamW);
 		aCamera.setHeight(newCamH);
@@ -70,16 +70,16 @@ void updateCamera(double dt, Camera &aCamera) {
 	glm::vec3 right = glm::normalize(glm::cross(up, front));
 
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_I)) {
-		pos -= front * CAMERA_SPEED;
+		pos -= front * CAMERA_SPEED * dt;
 	}
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_K)) {
-		pos += front * CAMERA_SPEED;
+		pos += front * CAMERA_SPEED * dt;
 	}
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_J)) {
-		pos -= right * CAMERA_SPEED;
+		pos -= right * CAMERA_SPEED * dt;
 	}
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_L)) {
-		pos += right * CAMERA_SPEED;
+		pos += right * CAMERA_SPEED * dt;
 	}
 	aCamera.setRotation(glm::quat(glm::vec3(-pitch, -yaw, 0.0)));
 	aCamera.setPosition(pos);
@@ -107,29 +107,18 @@ int main() {
 		"assets/skybox/top.png", "assets/skybox/bottom.png",
 		"assets/skybox/back.png", "assets/skybox/front.png");
 	aCamera.setParent(&aScene);
-	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 1200.0f));
+	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 2.0f));
 	aCamera.setNear(0.1f);
-	aCamera.setFar(10000.0f);
+	aCamera.setFar(100.0f);
 	planet.seed = 0;
 	planet.generateTerrain();
-	planet.planet.setDiffuse(OpenGLSetup::loadImage("assets/testing/grass.png"));
-	planet.planet.setSpecular(0);
-	planet.planet.setNormal(0);
-	planet.planet.setEmission(0);
-	planet.planet.setScale(glm::vec3(1000.0f));
-	planet.planet.setParent(&aScene);
-	planet.water.setDiffuse(OpenGLSetup::loadImage("assets/testing/water.png"));
-	planet.water.setSpecular(0);
-	planet.water.setNormal(0);
-	planet.water.setEmission(0);
-	planet.water.setScale(glm::vec3(1000.0f));
-	planet.water.setParent(&aScene);
+	planet.TEST(&aScene);
 	Cube forScale;
 	forScale.setPosition(glm::vec3(0.0f, 2.0f, 0.0f));
 	forScale.setParent(&aScene);
 	//////Lighting
 	sunLight.direction = glm::normalize(glm::vec3(0.0f, -1.0f, -1.0f));
-	sunLight.colour = glm::vec3(1.0f, 1.0f, 1.0f) * 0.4f;
+	sunLight.colour = glm::vec3(1.0f, 1.0f, 1.0f);
 	sunLight.setParent(&aScene);
 	//point.setParent(&aCamera);
 	//point.colour = glm::vec3(1.0f, 1.0f, 1.0f);
@@ -159,7 +148,7 @@ int main() {
 		//torch.setPosition(aCamera.getPosition());
 		//torch.direction = aCamera.getFront();
 		//redLight.setPosition(aCamera.getPosition());
-		updateCamera(dt, aCamera);
+		updateCamera(static_cast<float>(dt), aCamera);
 		aCamera.render();
 		//FPS counter
 		frames++;
