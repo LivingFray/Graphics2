@@ -21,10 +21,6 @@
 #define FACE_POS_Z 4
 #define FACE_NEG_Z 5
 
-//Graphical settings (LOD)
-#define NUM_LOD 5
-//2^7 by 2^7 verts = 16k
-#define MAX_VERTS (1 << 3)
 
 Planet::Planet() {
 }
@@ -75,7 +71,7 @@ void Planet::generateTerrain() {
 	Max verts per grid = 16k to be safe
 	Define grid size to be constant (MAX_VERTS by MAX_VERTS)
 	*/
-	int numGrids = static_cast<int>(ceil(static_cast<float>(NUM_NODES) / MAX_VERTS));
+	numGrids = static_cast<int>(ceil(static_cast<float>(NUM_NODES) / MAX_VERTS));
 	for (int l = 0; l < NUM_LOD; l++) {
 		//For each face
 		for (int face = 0; face < 6; face++) {
@@ -93,6 +89,50 @@ void Planet::generateTerrain() {
 			}
 		}
 	}
+}
+
+//Optimise by tracking current + last face, only update visible faces?
+
+//TODO Handle transformed planets
+
+void Planet::updateVisible(SceneObject* s, glm::vec3 pos) {
+	//Go over each grid and update lod
+	for (int face = 0; face < 6; face++) {
+		for (int gridX = 0; gridX < numGrids; gridX++) {
+			int cX = gridX * MAX_VERTS + MAX_VERTS / 2;
+			if (gridX == numGrids - 1) {
+				cX = gridX * MAX_VERTS + (NUM_NODES - gridX * MAX_VERTS) / 2;
+			}
+			for (int gridY = 0; gridY < numGrids; gridY++) {
+				int cY = gridY * MAX_VERTS + MAX_VERTS / 2;
+				if (gridY == numGrids - 1) {
+					cY = gridY * MAX_VERTS + (NUM_NODES - gridY * MAX_VERTS) / 2;
+				}
+				glm::vec3 off = pos - getVertex(cX, cY, face) * planetScale;
+				float distSqr = glm::dot(off, off);
+				int lod = NUM_LOD - 1;
+				while (LOD_Distances[lod] > distSqr && lod>0) { lod--; }
+				if (lod != lastLOD[face][gridX][gridY] || s != lastParent) {
+					//Hide old LOD
+					changeParent(LODS[lastLOD[face][gridX][gridY]][face][gridX][gridY], NULL);
+					//Set new LOD visible
+					changeParent(LODS[lod][face][gridX][gridY], s);
+					//Update lastLOD
+					lastLOD[face][gridX][gridY] = lod;
+					lastParent = s;
+				}
+			}
+		}
+	}
+}
+
+void Planet::setLODS(float lods[NUM_LOD]) {
+	//Copy values (square for cheaper distance checks)
+	//No error checks, because its your own damn fault if it breaks
+	for (int i = 0; i < NUM_LOD; i++) {
+		LOD_Distances[i] = lods[i] * lods[i];
+	}
+
 }
 
 void Planet::diamondSquare() {
@@ -255,6 +295,17 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	if (LODS[l][face][gridX].size() <= gridY) {
 		LODS[l][face][gridX].push_back(meshes);
 	}
+	if (lastLOD.size() <= face) {
+		std::vector<std::vector<int>> last;
+		lastLOD.push_back(last);
+	}
+	if (lastLOD[face].size() <= gridX) {
+		std::vector<int> last;
+		lastLOD[face].push_back(last);
+	}
+	if (lastLOD[face][gridX].size() <= gridY) {
+		lastLOD[face][gridX].push_back(0);
+	}
 	std::vector<unsigned short> ind;
 	std::vector<glm::vec3> o_vert;
 	std::vector<glm::vec2> o_uv;
@@ -271,6 +322,7 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 		m->setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 		m->useNormalTexture = false;
 		meshes.sea = m;
+		meshes.sea->setDiffuse(OpenGLSetup::loadImage("assets/testing/water.png"));
 	} else {
 		meshes.sea = NULL;
 	}
@@ -295,6 +347,7 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 		m->setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 		m->useNormalTexture = false;
 		meshes.grass = m;
+		meshes.grass->setDiffuse(OpenGLSetup::loadImage("assets/testing/grass.png"));
 	} else {
 		meshes.grass = NULL;
 	}
@@ -319,6 +372,7 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 		m->setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
 		m->useNormalTexture = false;
 		meshes.rock = m;
+		meshes.rock->setDiffuse(OpenGLSetup::loadImage("assets/testing/rock.png"));
 	} else {
 		meshes.rock = NULL;
 	}
@@ -626,5 +680,17 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 			uv_rock.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
 			norm_rock.push_back(glm::normalize(v));
 		}
+	}
+}
+
+inline void Planet::changeParent(PlanetMeshes& meshes, SceneObject* parent) {
+	if (meshes.sea) {
+		meshes.sea->setParent(parent);
+	}
+	if (meshes.grass) {
+		meshes.grass->setParent(parent);
+	}
+	if (meshes.rock) {
+		meshes.rock->setParent(parent);
 	}
 }

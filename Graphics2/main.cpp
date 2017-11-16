@@ -112,7 +112,8 @@ int main() {
 	aCamera.setFar(100.0f);
 	planet.seed = 0;
 	planet.generateTerrain();
-	planet.TEST(&aScene);
+	planet.updateVisible(&aScene, aCamera.getPosition());
+	//planet.TEST(&aScene);
 	Cube forScale;
 	forScale.setPosition(glm::vec3(0.0f, 2.0f, 0.0f));
 	forScale.setParent(&aScene);
@@ -149,6 +150,7 @@ int main() {
 		//torch.direction = aCamera.getFront();
 		//redLight.setPosition(aCamera.getPosition());
 		updateCamera(static_cast<float>(dt), aCamera);
+		planet.updateVisible(&aScene, aCamera.getPosition());
 		aCamera.render();
 		//FPS counter
 		frames++;

@@ -4,6 +4,7 @@
 #include "glm/gtc/quaternion.hpp"
 #define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/matrix_decompose.hpp"
+#include "Scene.h"
 
 SceneObject::SceneObject() {
 	localMat = glm::mat4(1);
@@ -43,9 +44,15 @@ bool SceneObject::setParent(SceneObject* obj) {
 	this->parent = obj;
 	if (obj) {
 		obj->children.push_back(this);
+		//Ensure correct scene
+		if (dynamic_cast<Scene*>(obj)) {
+			setScene(dynamic_cast<Scene*>(obj));
+		} else {
+			setScene(obj->scene);
+		}
+	} else {
+		setScene(NULL);
 	}
-	//Ensure correct scene
-	setScene(obj->scene);
 	return true;
 }
 

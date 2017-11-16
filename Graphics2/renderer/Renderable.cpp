@@ -17,6 +17,8 @@ void Renderable::setScene(Scene* s) {
 		if (old) {
 			old->renderables.erase(this);
 		}
-		s->renderables.insert(this);
+		if (s) {
+			s->renderables.insert(this);
+		}
 	}
 }
