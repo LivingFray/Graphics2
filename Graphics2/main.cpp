@@ -1,4 +1,5 @@
 #include <iostream>
+
 #include "renderer\OpenGLSetup.h"
 #include "renderer\Scene.h"
 #include "renderer\SceneObject.h"
@@ -12,8 +13,12 @@
 
 #include "terrain\Planet.h"
 
+#include "game\Game.h"
+
 #define MOUSE_SPEED 0.005
 #define CAMERA_SPEED 1.0f
+
+Game* game;
 
 double pitch, yaw;
 int newCamW = 0;
@@ -85,50 +90,19 @@ void updateCamera(float dt, Camera &aCamera) {
 	aCamera.setPosition(pos);
 }
 
+void keyEvent(GLFWwindow* window, int key, int scancode, int action, int mods) {
+	game->keyEvent(window, key, scancode, action, mods);
+}
+
 int main() {
 	OpenGLSetup::init();
-	Camera aCamera;
-	Scene aScene;
-	DirectionalLight sunLight;
-	//PointLight point;
-	//SpotLight torch;
+	game = new Game();
 
-	Planet planet;
 	glfwSetWindowSizeCallback(OpenGLSetup::window, windowResized);
+	glfwSetKeyCallback(OpenGLSetup::window, keyEvent);
 	int w, h;
 	glfwGetWindowSize(OpenGLSetup::window, &w, &h);
 	windowResized(OpenGLSetup::window, w, h);
-	////Skybox is very large, and causes massive slowdown in load times
-	//aScene.loadSkybox("assets/skybox/posX.png", "assets/skybox/negX.png",
-	//	"assets/skybox/posY.png", "assets/skybox/negY.png",
-	//	"assets/skybox/posZ.png", "assets/skybox/negZ.png");
-	//In case of messed up skybox, use this for debug
-	aScene.loadSkybox("assets/skybox/right.png", "assets/skybox/left.png",
-		"assets/skybox/top.png", "assets/skybox/bottom.png",
-		"assets/skybox/back.png", "assets/skybox/front.png");
-	aCamera.setParent(&aScene);
-	aCamera.setPosition(glm::vec3(0.0f, 0.0f, 2.0f));
-	aCamera.setNear(0.1f);
-	aCamera.setFar(100.0f);
-	planet.seed = 0;
-	planet.generateTerrain();
-	planet.updateVisible(&aScene, aCamera.getPosition());
-	//planet.TEST(&aScene);
-	Cube forScale;
-	forScale.setPosition(glm::vec3(0.0f, 2.0f, 0.0f));
-	forScale.setParent(&aScene);
-	//////Lighting
-	sunLight.direction = glm::normalize(glm::vec3(0.0f, -1.0f, -1.0f));
-	sunLight.colour = glm::vec3(1.0f, 1.0f, 1.0f);
-	sunLight.setParent(&aScene);
-	//point.setParent(&aCamera);
-	//point.colour = glm::vec3(1.0f, 1.0f, 1.0f);
-	//point.constant = 1.0f;
-	//point.linear = 0.0014f;
-	//point.quadratic = 0.000007f;
-	//point.position = glm::vec3(0.0f, 0.0f, 0.0f);
-	aScene.ambientLight = glm::vec3(0.2, 0.2, 0.2); //* 5.0f;
-	//aScene.ambientLight = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	glfwSetInputMode(OpenGLSetup::window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 	double time = glfwGetTime();
@@ -145,13 +119,10 @@ int main() {
 		dt = glfwGetTime() - time;
 		time = glfwGetTime();
 		glfwPollEvents();
-		//Update and draw
-		//torch.setPosition(aCamera.getPosition());
-		//torch.direction = aCamera.getFront();
-		//redLight.setPosition(aCamera.getPosition());
-		updateCamera(static_cast<float>(dt), aCamera);
-		planet.updateVisible(&aScene, aCamera.getPosition());
-		aCamera.render();
+		//Update game
+		game->update(dt);
+		//Draw game
+		game->draw();
 		//FPS counter
 		frames++;
 		t += dt;

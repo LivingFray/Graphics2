@@ -15,33 +15,6 @@ public:
 	//Updates the list of meshes that can be seen
 	void updateVisible(SceneObject* s, glm::vec3 pos);
 
-	void TEST(Scene* p) {
-		for (int l = 0; l < 5; l++) {
-			for (int f = 0; f < 6; f++) {
-				for (int gx = 0; gx < LODS[l][f].size(); gx++) {
-					for (int gy = 0; gy < LODS[l][f][gx].size(); gy++) {
-						PlanetMeshes meshes = LODS[l][f][gx][gy];
-						if (meshes.sea) {
-							meshes.sea->setParent(p);
-							meshes.sea->setPosition(glm::vec3(l * 10.0f, 0.0f, 0.0f));
-							meshes.sea->setDiffuse(OpenGLSetup::loadImage("assets/testing/water.png"));
-						}
-						if (meshes.grass) {
-							meshes.grass->setParent(p);
-							meshes.grass->setPosition(glm::vec3(l * 10.0f, 0.0f, 0.0f));
-							meshes.grass->setDiffuse(OpenGLSetup::loadImage("assets/testing/grass.png"));
-						}
-						if (meshes.rock) {
-							meshes.rock->setParent(p);
-							meshes.rock->setPosition(glm::vec3(l * 10.0f, 0.0f, 0.0f));
-							meshes.rock->setDiffuse(OpenGLSetup::loadImage("assets/testing/rock.png"));
-						}
-					}
-				}
-			}
-		}
-	};
-
 	void setLODS(float lods[NUM_LOD]);
 
 	float planetScale = 1.0f;

@@ -19,6 +19,7 @@ bool Model::loadModel(const char* path) {
 	std::vector<tinyobj::material_t> materials;
 	std::string err;
 	//Stupid model loader doesn't seem to understand subfolders
+	//Note to future self if materials don't load: obj loader requires a new line at end of files
 	std::string baseDir = "";
 	if (std::string(path).find_last_of("/\\") != std::string::npos) {
 		baseDir = std::string(path).substr(0, std::string(path).find_last_of("/\\")) + "/";
@@ -70,7 +71,10 @@ bool Model::loadModel(const char* path) {
 		m->setMesh(ind, v_out, u_out, n_out, t_out, b_out);
 		tinyobj::material_t mat = materials[s.mesh.material_ids[0]];
 		m->setDiffuse(OpenGLSetup::loadImage(baseDir + mat.diffuse_texname));
-		m->setNormal(OpenGLSetup::loadImage(baseDir + mat.normal_texname));
+		if (mat.normal_texname != "") {
+			m->setNormal(OpenGLSetup::loadImage(baseDir + mat.normal_texname));
+			m->useNormalTexture = true;
+		}
 		m->setSpecular(OpenGLSetup::loadImage(baseDir + mat.specular_texname));
 		m->setEmission(OpenGLSetup::loadImage(baseDir + mat.emissive_texname));
 		m->setShininess(mat.shininess);

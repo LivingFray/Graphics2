@@ -122,6 +122,8 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="game\Game.cpp" />
+    <ClCompile Include="game\Player.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="terrain\Planet.cpp" />
     <ClCompile Include="renderer\Camera.cpp" />
@@ -139,6 +141,8 @@
     <ClCompile Include="renderer\SpotLight.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="game\Game.h" />
+    <ClInclude Include="game\Player.h" />
     <ClInclude Include="terrain\Planet.h" />
     <ClInclude Include="renderer\Camera.h" />
     <ClInclude Include="renderer\Cube.h" />
