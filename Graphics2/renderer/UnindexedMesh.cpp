@@ -1,10 +1,9 @@
-#include "Mesh.h"
+#include "UnindexedMesh.h"
 
-Mesh::Mesh() {
+UnindexedMesh::UnindexedMesh() {
 	shader = Shader("shaders/multiLight.vert", "shaders/multiLight.frag");
 	program = shader.getProgram();
 	glGenVertexArrays(1, &vertexArray);
-	glGenBuffers(1, &elementBuffer);
 	glGenBuffers(1, &vertexBuffer);
 	glGenBuffers(1, &uvBuffer);
 	glGenBuffers(1, &normalBuffer);
@@ -22,8 +21,7 @@ Mesh::Mesh() {
 
 //TODO: Copy
 
-Mesh::~Mesh() {
-	glDeleteBuffers(1, &elementBuffer);
+UnindexedMesh::~UnindexedMesh() {
 	glDeleteBuffers(1, &vertexBuffer);
 	glDeleteBuffers(1, &uvBuffer);
 	glDeleteBuffers(1, &normalBuffer);
@@ -32,15 +30,12 @@ Mesh::~Mesh() {
 	glDeleteVertexArrays(1, &vertexArray);
 }
 
-void Mesh::setMesh(vector<unsigned short> indices, vector<glm::vec3> vertices, vector<glm::vec2> uvs, vector<glm::vec3> normals, vector<glm::vec3> tangents, vector<glm::vec3> bitangents) {
-	this->indices = indices;
+void UnindexedMesh::setMesh(vector<glm::vec3> vertices, vector<glm::vec2> uvs, vector<glm::vec3> normals, vector<glm::vec3> tangents, vector<glm::vec3> bitangents) {
 	this->vertices = vertices;
 	this->uvs = uvs;
 	this->normals = normals;
 	this->tangents = tangents;
 	this->bitangents = bitangents;
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned short), &(this->indices[0]), GL_STATIC_DRAW);
 	glBindVertexArray(vertexArray);
 	//Pass vertices
 	glEnableVertexAttribArray(0);
@@ -71,7 +66,7 @@ void Mesh::setMesh(vector<unsigned short> indices, vector<glm::vec3> vertices, v
 	}
 }
 
-void Mesh::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
+void UnindexedMesh::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
 	//Use correct shaders
 	glUseProgram(program);
 	//Enable the VAO
@@ -101,43 +96,33 @@ void Mesh::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
 	glUniform3fv(glGetUniformLocation(program, "viewPos"), 1, &(cam->getGlobalPosition())[0]);
 	//Shadows
 	glUniformMatrix4fv(glGetUniformLocation(program, "lightSpaceMatrix"), 1, false, &LSM[0][0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
+	glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 }
 
-void Mesh::renderShadow(GLuint p) {
+void UnindexedMesh::renderShadow(GLuint p) {
 	//Enable the VAO
 	glBindVertexArray(vertexArray);
 	//Pass matrices to shader
 	glUniformMatrix4fv(glGetUniformLocation(p, "model"), 1, false, &(this->getGlobalMatrix())[0][0]);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
-	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
+	glDrawArrays(GL_TRIANGLES, 0, vertices.size() / 3);
 }
 
-void Mesh::setShininess(float shininess) {
+void UnindexedMesh::setShininess(float shininess) {
 	this->shininess = shininess;
 }
 
-void Mesh::setDiffuse(GLuint diffuse) {
+void UnindexedMesh::setDiffuse(GLuint diffuse) {
 	this->diffuse = diffuse;
 }
 
-void Mesh::setSpecular(GLuint specular) {
+void UnindexedMesh::setSpecular(GLuint specular) {
 	this->specular = specular;
 }
 
-void Mesh::setEmission(GLuint emission) {
+void UnindexedMesh::setEmission(GLuint emission) {
 	this->emission = emission;
 }
 
-void Mesh::setNormal(GLuint normal) {
+void UnindexedMesh::setNormal(GLuint normal) {
 	this->normal = normal;
-}
-
-void Mesh::setName(string name) {
-	this->name = name;
-}
-
-void Mesh::setModel(Model* m) {
-	this->model = m;
 }

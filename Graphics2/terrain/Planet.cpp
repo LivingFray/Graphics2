@@ -1,9 +1,12 @@
 #include "Planet.h"
 #include <random>
 #include "../renderer/glm/gtc/matrix_transform.hpp"
+
+#include <iostream>
+
 //Generator settings
 //For testing use low LOD
-#define NODES_EXP 5
+#define NODES_EXP 7
 #define NUM_NODES ((1 << NODES_EXP) + 1)
 #define MIN_Y (-0.15f)
 #define MAX_Y 0.15f
@@ -22,6 +25,8 @@
 #define FACE_NEG_Z 5
 
 
+#define TEX_REPEAT 16.0f
+
 Planet::Planet() {
 }
 
@@ -29,18 +34,10 @@ Planet::Planet() {
 Planet::~Planet() {
 }
 
-/*
-Generate a planet by creating 6 height maps that share edges.
-Put these height maps in a cube and distort the cube into a sphere.
-
-Height maps are generated using Diamond-Square Algorithm
-
-x=0,y=0 is bottom left
-
-*/
 
 void Planet::generateTerrain() {
 	//Allocate memory for heightmap
+	std::cout << "Allocating memory for heightmap" << std::endl;
 	for (unsigned int f = 0; f < 6; f++) {
 		//For each face
 		std::vector<std::vector<float>> face;
@@ -73,15 +70,16 @@ void Planet::generateTerrain() {
 	*/
 	numGrids = static_cast<int>(ceil(static_cast<float>(NUM_NODES) / MAX_VERTS));
 	for (int l = 0; l < NUM_LOD; l++) {
+		std::cout << "Converting heightmap to meshes (LOD" << l << ")" << std::endl;
 		//For each face
 		for (int face = 0; face < 6; face++) {
 			//For each grid cell
 			for (int gridX = 0; gridX < numGrids; gridX++) {
+				int minX = MAX_VERTS * gridX;
+				int maxX = gridX == numGrids - 1 ? NUM_NODES : minX + MAX_VERTS;
 				for (int gridY = 0; gridY < numGrids; gridY++) {
 					//Calculate bounds of the grid
-					int minX = MAX_VERTS * gridX;
 					int minY = MAX_VERTS * gridY;
-					int maxX = gridX == numGrids - 1 ? NUM_NODES : minX + MAX_VERTS;
 					int maxY = gridY == numGrids - 1 ? NUM_NODES : minY + MAX_VERTS;
 					generateGrid(l, face, minX, minY, maxX, maxY);
 					makeMeshes(l, face, gridX, gridY);
@@ -95,7 +93,10 @@ void Planet::generateTerrain() {
 
 //TODO Handle transformed planets
 
-void Planet::updateVisible(SceneObject* s, glm::vec3 pos) {
+void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos) {
+	glm::vec3 groundLevelPos = glm::normalize(pos) * planetScale;
+	float range = 1.75f * MAX_VERTS * planetScale;
+	range *= range;
 	//Go over each grid and update lod
 	for (int face = 0; face < 6; face++) {
 		for (int gridX = 0; gridX < numGrids; gridX++) {
@@ -108,10 +109,17 @@ void Planet::updateVisible(SceneObject* s, glm::vec3 pos) {
 				if (gridY == numGrids - 1) {
 					cY = gridY * MAX_VERTS + (NUM_NODES - gridY * MAX_VERTS) / 2;
 				}
-				glm::vec3 off = pos - getVertex(cX, cY, face) * planetScale;
-				float distSqr = glm::dot(off, off);
 				int lod = NUM_LOD - 1;
+				glm::vec3 lowOff = pos - getVertex(cX, cY, face);
+				float distSqr = glm::dot(lowOff, lowOff);
+				glm::vec3 off = groundLevelPos - getVertex(cX, cY, face, 0.0f);
+				//Close grids have LOD calculated purely on vertical height
+				if (glm::dot(off, off) < range) {
+					off = groundLevelPos - pos;
+					distSqr = glm::dot(off, off);
+				}
 				while (LOD_Distances[lod] > distSqr && lod>0) { lod--; }
+				SceneObject* s = lod == 0 ? highLod : lowLod;
 				if (lod != lastLOD[face][gridX][gridY] || s != lastParent) {
 					//Hide old LOD
 					changeParent(LODS[lastLOD[face][gridX][gridY]][face][gridX][gridY], NULL);
@@ -138,6 +146,7 @@ void Planet::setLODS(float lods[NUM_LOD]) {
 void Planet::diamondSquare() {
 	std::uniform_real_distribution<float> uni(MIN_Y, MAX_Y);
 	std::default_random_engine rng(seed);
+	std::cout << "Creating corner nodes" << std::endl;
 	//Create corners
 	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, 0, 0);
 	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, 0, NUM_NODES - 1);
@@ -147,7 +156,7 @@ void Planet::diamondSquare() {
 	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, 0, NUM_NODES - 1);
 	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, NUM_NODES - 1, 0);
 	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, NUM_NODES - 1, NUM_NODES - 1);
-
+	std::cout << "Applying diamond square algorithm" << std::endl;
 	//Iteratively apply DSA
 	int size = NUM_NODES - 1;
 	float rand_var = (MAX_Y - MIN_Y) / 2;
@@ -199,14 +208,13 @@ inline void Planet::createTransformations() {
 	//Centre planet on 0,0,0 (model space)
 	float halfNodes = static_cast<float>(NUM_NODES - 1) / 2.0f;
 	glm::mat4 pos = glm::translate(glm::mat4(1), glm::vec3(-halfNodes, halfNodes, -halfNodes));
-	glm::mat4 scale = glm::scale(glm::mat4(1), glm::vec3(1.0f / (NUM_NODES - 1)));
 
-	faceTrans[FACE_POS_X] = scale * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_NEG_X] = scale * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * pos;
-	faceTrans[FACE_POS_Y] = scale * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_NEG_Y] = scale * glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_POS_Z] = scale * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
-	faceTrans[FACE_NEG_Z] = scale * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_POS_X] = glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_NEG_X] = glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * pos;
+	faceTrans[FACE_POS_Y] = glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_NEG_Y] = glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_POS_Z] = glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
+	faceTrans[FACE_NEG_Z] = glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f)) * glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
 }
 
 inline void Planet::generateGrid(int l, int f, int minX, int minY, int maxX, int maxY) {
@@ -280,30 +288,30 @@ inline void Planet::generateGrid(int l, int f, int minX, int minY, int maxX, int
 
 inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	PlanetMeshes meshes;
-	if (LODS.size() <= l) {
+	if (LODS.size() <= static_cast<unsigned int>(l)) {
 		std::vector<std::vector<std::vector<PlanetMeshes>>> n;
 		LODS.push_back(n);
 	}
-	if (LODS[l].size() <= face) {
+	if (LODS[l].size() <= static_cast<unsigned int>(face)) {
 		std::vector<std::vector<PlanetMeshes>> n;
 		LODS[l].push_back(n);
 	}
-	if (LODS[l][face].size() <= gridX) {
+	if (LODS[l][face].size() <= static_cast<unsigned int>(gridX)) {
 		std::vector<PlanetMeshes> n;
 		LODS[l][face].push_back(n);
 	}
 	if (LODS[l][face][gridX].size() <= gridY) {
 		LODS[l][face][gridX].push_back(meshes);
 	}
-	if (lastLOD.size() <= face) {
+	if (lastLOD.size() <= static_cast<unsigned int>(face)) {
 		std::vector<std::vector<int>> last;
 		lastLOD.push_back(last);
 	}
-	if (lastLOD[face].size() <= gridX) {
+	if (lastLOD[face].size() <= static_cast<unsigned int>(gridX)) {
 		std::vector<int> last;
 		lastLOD[face].push_back(last);
 	}
-	if (lastLOD[face][gridX].size() <= gridY) {
+	if (lastLOD[face][gridX].size() <= static_cast<unsigned int>(gridY)) {
 		lastLOD[face][gridX].push_back(0);
 	}
 	std::vector<unsigned short> ind;
@@ -313,9 +321,8 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	std::vector<glm::vec3> o_tan;
 	std::vector<glm::vec3> o_bitan;
 	//Calculate tangent + bitangent
-	Model::computeTangentBasis(vert_sea, uv_sea, norm_sea, tan, bitan);
 	//Index vertices
-	Model::indexVBO(vert_sea, uv_sea, norm_sea, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	Model::indexVBO(vert_sea, uv_sea, norm_sea, ind, o_vert, o_uv, o_norm);
 	//Set mesh
 	if (ind.size() > 0) {
 		Mesh* m = new Mesh();
@@ -338,9 +345,8 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	o_tan.clear();
 	o_bitan.clear();
 	//Calculate tangent + bitangent
-	Model::computeTangentBasis(vert_land, uv_land, norm_land, tan, bitan);
 	//Index vertices
-	Model::indexVBO(vert_land, uv_land, norm_land, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	Model::indexVBO(vert_land, uv_land, norm_land, ind, o_vert, o_uv, o_norm);
 	//Set mesh
 	if (ind.size() > 0) {
 		Mesh* m = new Mesh();
@@ -363,9 +369,8 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	o_tan.clear();
 	o_bitan.clear();
 	//Calculate tangent + bitangent
-	Model::computeTangentBasis(vert_rock, uv_rock, norm_rock, tan, bitan);
 	//Index vertices
-	Model::indexVBO(vert_rock, uv_rock, norm_rock, tan, bitan, ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+	Model::indexVBO(vert_rock, uv_rock, norm_rock, ind, o_vert, o_uv, o_norm);
 	//Set mesh
 	if (ind.size() > 0) {
 		Mesh* m = new Mesh();
@@ -623,7 +628,7 @@ glm::vec3 Planet::getVertex(int x, int y, int face) {
 	p = glm::normalize(p);
 	//Extrude by heightmap
 	float height = 1.0f + getNode(face, x, y);
-	p = p * height;
+	p = p * height * planetScale;
 	return p;
 }
 
@@ -632,7 +637,7 @@ glm::vec3 Planet::getVertex(int x, int y, int face, float height) {
 	glm::vec3 p = glm::vec3(faceTrans[face] * glm::vec4(x, 0.0f, y, 1.0f));
 	p = glm::normalize(p);
 	//Extrude by heightmap
-	p = p * (height + 1.0f);
+	p = p * (height + 1.0f) * planetScale;
 	return p;
 }
 
@@ -658,8 +663,11 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 	if (addSea) {
 		for (int i = 0; i < 3; i++) {
 			glm::vec3 v = getVertex(xs[i], ys[i], f, HEIGHT_SEA);
+			if (l != 0) {
+				v *= lowLodScale;
+			}
 			vert_sea.push_back(v);
-			uv_sea.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			uv_sea.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
 			norm_sea.push_back(glm::normalize(v));
 		}
 	}
@@ -667,8 +675,11 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 	if (addLand) {
 		for (int i = 0; i < 3; i++) {
 			glm::vec3 v = getVertex(xs[i], ys[i], f);
+			if (l != 0) {
+				v *= lowLodScale;
+			}
 			vert_land.push_back(v);
-			uv_land.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			uv_land.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
 			norm_land.push_back(glm::normalize(v));
 		}
 	}
@@ -676,8 +687,11 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 	if (addRock) {
 		for (int i = 0; i < 3; i++) {
 			glm::vec3 v = getVertex(xs[i], ys[i], f);
+			if (l != 0) {
+				v *= lowLodScale;
+			}
 			vert_rock.push_back(v);
-			uv_rock.push_back(glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+			uv_rock.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
 			norm_rock.push_back(glm::normalize(v));
 		}
 	}

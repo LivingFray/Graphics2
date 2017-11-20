@@ -28,66 +28,7 @@ void windowResized(GLFWwindow* window, int width, int height) {
 	newCamW = width;
 	newCamH = height;
 	glViewport(0, 0, width, height);
-}
-
-void updateCamera(float dt, Camera &aCamera) {
-	if (newCamW && aCamera.getPerspective()) {
-		aCamera.setWidth(newCamW);
-		aCamera.setHeight(newCamH);
-		newCamW = 0;
-		newCamH = 0;
-	}
-	double mx, my;
-	int w, h;
-	glfwGetCursorPos(OpenGLSetup::window, &mx, &my);
-	glfwGetWindowSize(OpenGLSetup::window, &w, &h);
-	mx -= static_cast<double>(w) / 2.0;
-	my -= static_cast<double>(h) / 2.0;
-	glfwSetCursorPos(OpenGLSetup::window,
-		static_cast<double>(w) / 2.0,
-		static_cast<double>(h) / 2.0
-	);
-
-	yaw += mx * MOUSE_SPEED;
-	pitch += my * MOUSE_SPEED;
-
-	if (yaw > glm::two_pi<double>()) {
-		yaw -= glm::two_pi<double>();
-	}
-	if (yaw < 0.0) {
-		yaw += glm::two_pi<double>();
-	}
-	if (pitch > glm::half_pi<double>()) {
-		pitch = glm::half_pi<double>();
-	}
-	if (pitch < -glm::half_pi<double>()) {
-		pitch = -glm::half_pi<double>();
-	}
-
-	glm::vec3 pos = aCamera.getPosition();
-	glm::vec3 front = glm::vec3(
-		-sin(yaw) * cos(pitch),
-		sin(pitch),
-		cos(yaw) * cos(pitch)
-	);
-	glm::normalize(front);
-	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
-	glm::vec3 right = glm::normalize(glm::cross(up, front));
-
-	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_I)) {
-		pos -= front * CAMERA_SPEED * dt;
-	}
-	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_K)) {
-		pos += front * CAMERA_SPEED * dt;
-	}
-	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_J)) {
-		pos -= right * CAMERA_SPEED * dt;
-	}
-	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_L)) {
-		pos += right * CAMERA_SPEED * dt;
-	}
-	aCamera.setRotation(glm::quat(glm::vec3(-pitch, -yaw, 0.0)));
-	aCamera.setPosition(pos);
+//	assert(false); //PROPAGATE UPDATED CAMERA DIMENSIONS
 }
 
 void keyEvent(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -130,6 +71,8 @@ int main() {
 			t -= 1.0;
 			//TODO: Display on screen with text
 			std::cout << "FPS: " << frames << std::endl;
+
+			std::cout << game->worldPos.x << ", " << game->worldPos.y << ", " << game->worldPos.z << std::endl;
 			frames = 0;
 		}
 		glfwSwapBuffers(OpenGLSetup::window);

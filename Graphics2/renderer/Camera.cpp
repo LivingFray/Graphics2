@@ -141,8 +141,9 @@ void Camera::render() {
 	//TODO: Experiment with multiple maps vs re rendering scene
 	if (clearOnDraw) {
 		glClearColor(0.0, 0.0, 0.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
+	glClear(GL_DEPTH_BUFFER_BIT);
 	//Render normally
 	for (Renderable* r : renderables) {
 		r->render(this, depthMap, LSM);

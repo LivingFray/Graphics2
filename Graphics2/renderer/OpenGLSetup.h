@@ -5,6 +5,7 @@ Sets up all the necessary OpenGL things
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <string>
+#include <map>
 #pragma comment(lib, "opengl32.lib")
 #pragma comment(lib, "glfw3.lib")
 #pragma comment(lib, "glew32.lib")
@@ -27,4 +28,5 @@ public:
 private:
 	//Does most of the heavy lifting when initialising
 	static void sharedInit();
+	static std::map<std::string, GLuint> textures;
 };

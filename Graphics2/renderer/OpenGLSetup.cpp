@@ -15,6 +15,8 @@ extern "C"
 
 GLFWwindow* OpenGLSetup::window = nullptr;
 
+std::map<std::string, GLuint> OpenGLSetup::textures;
+
 void OpenGLSetup::init(int width, int height, const char* title,
 		GLFWmonitor* monitor, GLFWwindow* share) {
 	if (!glfwInit()) {
@@ -86,9 +88,9 @@ void OpenGLSetup::sharedInit() {
 
 GLuint OpenGLSetup::loadImage(std::string filename) {
 	//TODO: Handling to allow for automatic deletion
-	//if (textures[filename]) {
-	//	return textures[filename];
-	//}
+	if (textures[filename]) {
+		return textures[filename];
+	}
 	GLuint tex;
 	glGenTextures(1, &tex);
 	GLenum err = glGetError();
@@ -103,7 +105,7 @@ GLuint OpenGLSetup::loadImage(std::string filename) {
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		stbi_image_free(data);
-	//	textures.insert_or_assign(filename, tex);
+		textures.insert_or_assign(filename, tex);
 	}
 	return tex;
 }

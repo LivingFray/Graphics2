@@ -10,11 +10,11 @@ Shader::Shader() {
 }
 
 Shader::Shader(std::string vert, std::string frag) {
-	std::string vertString = readFile(vert);
-	std::string fragString = readFile(frag);
 	if (shaders.size() > 0 && (shaders.count(vert + frag))) {
 		id = shaders[vert + frag];
 	} else {
+		std::string vertString = readFile(vert);
+		std::string fragString = readFile(frag);
 		const char* vertChars = vertString.c_str();
 		const char* fragChars = fragString.c_str();
 		if (*vertChars && *fragChars) {

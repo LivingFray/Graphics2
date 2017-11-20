@@ -2,19 +2,24 @@
 #include "Game.h"
 
 #define MOUSE_SPEED 0.005
-#define CAMERA_SPEED 10.0f
 
 
 Player::Player() {
 	ship = new Model();
 	ship->loadModel("assets/ship/ship.obj");
 	cockpit = new Camera();
-	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -3.0f));
+	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -1.5f));
 	cockpit->setParent(ship);
+	cockpit->setNear(0.1f);
+	cockpit->setFar(4000.0f);
+	cockpit->clearOnDraw = false;
 	orbital = new Camera();
-	orbital->setPosition(glm::vec3(0.0f, 3.0f, 10.0f));
+	orbital->setPosition(glm::vec3(0.0f, 1.5f, 5.0f));
 	orbital->setRotation(glm::quat(glm::vec3(-glm::pi<float>() / 16.0f, 0.0f, 0.0f)));
 	orbital->setParent(ship);
+	orbital->setNear(0.1f);
+	orbital->setFar(4000.0f);
+	orbital->clearOnDraw = false;
 }
 
 
@@ -51,6 +56,14 @@ void Player::keyEvent(GLFWwindow* window, int key, int scancode, int action, int
 			break;
 		default:
 			break;
+		}
+	}
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+		boostSpeed = !boostSpeed;
+		if (boostSpeed) {
+			shipSpeed *= 100.0f;
+		} else {
+			shipSpeed /= 100.0f;
 		}
 	}
 }
@@ -134,20 +147,19 @@ void Player::rotateShip() {
 }
 
 void Player::moveShip(float dt) {
-	glm::vec3 pos = ship->getPosition();
+	//Prevent Floating point errors by moving the world around the ship
 	glm::vec3 front = ship->getFront();
 	glm::vec3 right = ship->getRight();
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_I)) {
-		pos += front * CAMERA_SPEED * dt;
+		game->worldPos += front * shipSpeed * dt;
 	}
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_K)) {
-		pos -= front * CAMERA_SPEED * dt;
+		game->worldPos -= front * shipSpeed * dt;
 	}
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_J)) {
-		pos -= right * CAMERA_SPEED * dt;
+		game->worldPos -= right * shipSpeed * dt;
 	}
 	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_L)) {
-		pos += right * CAMERA_SPEED * dt;
+		game->worldPos += right * shipSpeed * dt;
 	}
-	ship->setPosition(pos);
 }

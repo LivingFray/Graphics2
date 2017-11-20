@@ -4,8 +4,8 @@
 #include "..\renderer\Scene.h"
 
 //Graphical settings (LOD)
-#define NUM_LOD 5
-#define MAX_VERTS (1 << 7)
+#define NUM_LOD 4
+#define MAX_VERTS (1 << 4)
 
 class Planet {
 public:
@@ -13,11 +13,12 @@ public:
 	~Planet();
 	void generateTerrain();
 	//Updates the list of meshes that can be seen
-	void updateVisible(SceneObject* s, glm::vec3 pos);
+	void updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos);
 
 	void setLODS(float lods[NUM_LOD]);
 
 	float planetScale = 1.0f;
+	float lowLodScale = 1.0f;
 	unsigned int seed;
 private:
 	struct PlanetMeshes {
@@ -26,7 +27,7 @@ private:
 		Mesh* rock;
 	};
 	//Maximum distance at which that LOD is used
-	float LOD_Distances[NUM_LOD] = { 0.1f, 0.5f, 1.0f, 1.5f, 2.0f };
+	float LOD_Distances[NUM_LOD] = { 0.1f, 0.5f, 1.0f, 1.5f };
 	//The number of grids in each direction of each face
 	int numGrids;
 

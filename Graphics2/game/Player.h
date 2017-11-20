@@ -13,6 +13,9 @@ public:
 	void update(double dt);
 	void keyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void setGame(Game* g);
+	Model* getShip() {
+		return ship;
+	};
 	Camera* getActiveCamera();
 private:
 	void moveCockpitCamera();
@@ -26,6 +29,8 @@ private:
 	float cockpitPitch = 0.0f;
 	float shipYaw = 0.0f;
 	float shipPitch = 0.0f;
+	float shipSpeed = 10.0f;
+	bool boostSpeed = false;
 	CurrentCamera activeCam;
 };
 
