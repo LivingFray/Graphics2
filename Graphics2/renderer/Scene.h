@@ -25,6 +25,8 @@ public:
 	void updateLights();
 	DirectionalLight* getDirectionalLight();
 	glm::vec3 ambientLight;
+	glm::vec3 skyColour;
+	float skyAmount;
 private:
 	//Special rendering list
 	set<Renderable*> renderables;
@@ -35,7 +37,6 @@ private:
 	friend DirectionalLight;
 	friend PointLight;
 	friend SpotLight;
-	//list<Camera*> cameras;
 	GLuint skybox;
 	Shader skyboxShader;
 	Shader meshShader;
@@ -44,6 +45,8 @@ private:
 	GLuint viewUniform;
 	GLuint projUniform;
 	GLuint cubeSampler;
+	GLuint skyColourUniform;
+	GLuint skyAmountUniform;
 	static constexpr GLfloat vertexData[] = {
 		-1.0f,  1.0f, -1.0f,
 		-1.0f, -1.0f, -1.0f,

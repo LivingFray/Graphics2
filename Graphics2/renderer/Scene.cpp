@@ -4,6 +4,8 @@
 
 Scene::Scene() {
 	ambientLight = glm::vec3(0.2f, 0.2f, 0.2f);
+	skyColour = glm::vec3(33.0f / 255.0f, 120.0f / 255.0f, 224.0f / 255.0f);
+	skyAmount = 0.0f;
 	//Skybox related things
 	skybox = 0;
 	skyboxShader = Shader("shaders/skybox.vert", "shaders/skybox.frag");
@@ -18,6 +20,8 @@ Scene::Scene() {
 	viewUniform = glGetUniformLocation(skyboxShader.getProgram(), "view");
 	projUniform = glGetUniformLocation(skyboxShader.getProgram(), "projection");
 	cubeSampler = glGetUniformLocation(skyboxShader.getProgram(), "skybox");
+	skyColourUniform = glGetUniformLocation(skyboxShader.getProgram(), "skyColour");
+	skyAmountUniform = glGetUniformLocation(skyboxShader.getProgram(), "skyAmount");
 	glBindVertexArray(0);
 }
 
@@ -79,6 +83,8 @@ void Scene::renderSkybox(Camera* c) {
 		glUseProgram(skyboxShader.getProgram());
 		glDepthFunc(GL_LEQUAL);
 		glUniform1i(cubeSampler, 0);
+		glUniform1f(skyAmountUniform, skyAmount);
+		glUniform3fv(skyColourUniform, 1, &skyColour[0]);
 		//Remove translation from camera
 		glm::mat4 view = glm::mat4(glm::mat3(c->getView()));
 		glm::mat4 proj = c->getProjection();

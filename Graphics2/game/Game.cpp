@@ -6,6 +6,9 @@
 
 #define SKYBOX_FOLDER "skybox_testing"
 
+#define ATMOS_MIN 2000.0f
+#define ATMOS_MAX 4000.0f
+
 void loadAssets(Game* game) {
 	std::string folder(SKYBOX_FOLDER);
 	//Skybox
@@ -17,7 +20,7 @@ void loadAssets(Game* game) {
 	std::cout << "Loading models..." << std::endl;
 	game->player = new Player();
 	game->player->setGame(game);
-	game->worldPos = glm::vec3(35000.0f, 0.0f, 0.0f);
+	game->worldPos = glm::vec3(38000.0f, 0.0f, 0.0f);
 
 	std::cout << "All models loaded" << std::endl;
 }
@@ -91,6 +94,7 @@ void Game::keyEvent(GLFWwindow* window, int key, int scancode, int action, int m
 void Game::update(double dt) {
 	if (player) {
 		player->update(dt);
+		lowLodScene->skyAmount = 1.0f - glm::clamp((glm::length(worldPos) - homeWorld->planetScale - ATMOS_MIN)/(ATMOS_MAX - ATMOS_MIN), 0.0f, 1.0f);
 	}
 	homeWorld->updateVisible(transformedSpace, lowLodScene, worldPos);
 }
