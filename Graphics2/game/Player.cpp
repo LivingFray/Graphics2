@@ -1,8 +1,43 @@
 #include "Player.h"
 #include "Game.h"
 
-#define MOUSE_SPEED 0.005
+//Control scheme to use (SUPERIOR_CONTROLS - Left handed IJKL, GAMER_CONTROLS - WASD, Anything else - Arrow keys)
+#define SUPERIOR_CONTROLS
 
+#define MOUSE_SPEED 0.005
+#define ROLL_SPEED 1.0
+
+#ifdef SUPERIOR_CONTROLS
+
+#define MOVE_FORWARD GLFW_KEY_I
+#define MOVE_BACKWARD GLFW_KEY_K
+#define MOVE_LEFT GLFW_KEY_J
+#define MOVE_RIGHT GLFW_KEY_L
+#define ROLL_LEFT GLFW_KEY_U
+#define ROLL_RIGHT GLFW_KEY_O
+
+#else
+
+#ifdef GAMER_CONTROLS
+
+#define MOVE_FORWARD GLFW_KEY_W
+#define MOVE_BACKWARD GLFW_KEY_S
+#define MOVE_LEFT GLFW_KEY_A
+#define MOVE_RIGHT GLFW_KEY_D
+#define ROLL_LEFT GLFW_KEY_Q
+#define ROLL_RIGHT GLFW_KEY_E
+
+#else
+
+#define MOVE_FORWARD GLFW_KEY_UP
+#define MOVE_BACKWARD GLFW_KEY_DOWN
+#define MOVE_LEFT GLFW_KEY_LEFT
+#define MOVE_RIGHT GLFW_KEY_RIGHT
+#define ROLL_LEFT GLFW_KEY_RIGHT_CONTROL
+#define ROLL_RIGHT GLFW_KEY_RIGHT_SHIFT
+
+#endif
+#endif
 
 Player::Player() {
 	ship = new Model();
@@ -11,14 +46,14 @@ Player::Player() {
 	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -1.5f));
 	cockpit->setParent(ship);
 	cockpit->setNear(0.1f);
-	cockpit->setFar(4000.0f);
+	cockpit->setFar(12000.0f);
 	cockpit->clearOnDraw = false;
 	orbital = new Camera();
 	orbital->setPosition(glm::vec3(0.0f, 1.5f, 5.0f));
 	orbital->setRotation(glm::quat(glm::vec3(-glm::pi<float>() / 16.0f, 0.0f, 0.0f)));
 	orbital->setParent(ship);
 	orbital->setNear(0.1f);
-	orbital->setFar(4000.0f);
+	orbital->setFar(12000.0f);
 	orbital->clearOnDraw = false;
 }
 
@@ -127,39 +162,31 @@ void Player::rotateShip() {
 		static_cast<double>(w) / 2.0,
 		static_cast<double>(h) / 2.0
 	);
+	ship->setRotation(ship->getRotation() * glm::quat(glm::vec3(-my * MOUSE_SPEED, -mx * MOUSE_SPEED, 0.0f)));
 
-	shipYaw += mx * MOUSE_SPEED;
-	shipPitch += my * MOUSE_SPEED;
-
-	if (shipYaw > glm::two_pi<double>()) {
-		shipYaw -= glm::two_pi<double>();
-	}
-	if (shipYaw < 0.0) {
-		shipYaw += glm::two_pi<double>();
-	}
-	if (shipPitch > glm::half_pi<double>()) {
-		shipPitch = glm::half_pi<double>();
-	}
-	if (shipPitch < -glm::half_pi<double>()) {
-		shipPitch = -glm::half_pi<double>();
-	}
-	ship->setRotation(glm::quat(glm::vec3(-shipPitch, -shipYaw, 0.0)));
 }
 
 void Player::moveShip(float dt) {
 	//Prevent Floating point errors by moving the world around the ship
+	//Insert futurama quote about moving the universe here
 	glm::vec3 front = ship->getFront();
 	glm::vec3 right = ship->getRight();
-	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_I)) {
+	if (glfwGetKey(OpenGLSetup::window, MOVE_FORWARD)) {
 		game->worldPos += front * shipSpeed * dt;
 	}
-	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_K)) {
+	if (glfwGetKey(OpenGLSetup::window, MOVE_BACKWARD)) {
 		game->worldPos -= front * shipSpeed * dt;
 	}
-	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_J)) {
+	if (glfwGetKey(OpenGLSetup::window, MOVE_LEFT)) {
 		game->worldPos -= right * shipSpeed * dt;
 	}
-	if (glfwGetKey(OpenGLSetup::window, GLFW_KEY_L)) {
+	if (glfwGetKey(OpenGLSetup::window, MOVE_RIGHT)) {
 		game->worldPos += right * shipSpeed * dt;
+	}
+	if (glfwGetKey(OpenGLSetup::window, ROLL_LEFT)) {
+		ship->setRotation(ship->getRotation() * glm::quat(glm::vec3(0.0f, 0.0f, ROLL_SPEED * dt)));
+	}
+	if (glfwGetKey(OpenGLSetup::window, ROLL_RIGHT)) {
+		ship->setRotation(ship->getRotation() * glm::quat(glm::vec3(0.0f, 0.0f, -ROLL_SPEED * dt)));
 	}
 }

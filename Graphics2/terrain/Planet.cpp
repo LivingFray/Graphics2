@@ -6,7 +6,8 @@
 
 //Generator settings
 //For testing use low LOD
-#define NODES_EXP 7
+///////////////////////////////////////////////////////////////////////////////INCREASE: WAS 7, If loading time is fixed bump up more
+#define NODES_EXP 3
 #define NUM_NODES ((1 << NODES_EXP) + 1)
 #define MIN_Y (-0.15f)
 #define MAX_Y 0.15f

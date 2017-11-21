@@ -13,7 +13,7 @@ SceneObject::SceneObject() {
 	scene = nullptr;
 	pos = glm::vec3(0.0);
 	scale = glm::vec3(1.0);
-	rot = glm::quat();
+	rot = glm::quat(glm::vec3(0.0f, 0.0f, 0.0f));
 }
 
 SceneObject::SceneObject(SceneObject& other) {
