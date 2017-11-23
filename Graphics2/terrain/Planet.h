@@ -5,15 +5,15 @@
 
 //Graphical settings (LOD)
 #define NUM_LOD 4
-#define MAX_VERTS (1 << 4)
+#define MAX_VERTS (1 << 2)
 
 class Planet {
 public:
 	Planet();
 	~Planet();
-	void generateTerrain();
+	void generateTerrain(int octDepth);
 	//Updates the list of meshes that can be seen
-	void updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos);
+	void updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::vector<Mesh*> &highPoly);
 
 	void setLODS(float lods[NUM_LOD]);
 
@@ -69,5 +69,8 @@ private:
 	//Face     GridX       GridY
 	std::vector<std::vector<std::vector<int>>> lastLOD;
 	SceneObject* lastParent = NULL;
+
+	//Last position scene was updated from
+	glm::vec3 lastPos;
 };
 

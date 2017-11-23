@@ -7,7 +7,7 @@
 //Generator settings
 //For testing use low LOD
 ///////////////////////////////////////////////////////////////////////////////INCREASE: WAS 7, If loading time is fixed bump up more
-#define NODES_EXP 3
+#define NODES_EXP 4
 #define NUM_NODES ((1 << NODES_EXP) + 1)
 #define MIN_Y (-0.15f)
 #define MAX_Y 0.15f
@@ -29,6 +29,7 @@
 #define TEX_REPEAT 16.0f
 
 Planet::Planet() {
+	lastPos = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 
@@ -36,7 +37,7 @@ Planet::~Planet() {
 }
 
 
-void Planet::generateTerrain() {
+void Planet::generateTerrain(int octDepth) {
 	//Allocate memory for heightmap
 	std::cout << "Allocating memory for heightmap" << std::endl;
 	for (unsigned int f = 0; f < 6; f++) {
@@ -77,13 +78,31 @@ void Planet::generateTerrain() {
 			//For each grid cell
 			for (int gridX = 0; gridX < numGrids; gridX++) {
 				int minX = MAX_VERTS * gridX;
-				int maxX = gridX == numGrids - 1 ? NUM_NODES : minX + MAX_VERTS;
+				int maxX = gridX == numGrids - 1 ? NUM_NODES -1: minX + MAX_VERTS;
 				for (int gridY = 0; gridY < numGrids; gridY++) {
 					//Calculate bounds of the grid
 					int minY = MAX_VERTS * gridY;
-					int maxY = gridY == numGrids - 1 ? NUM_NODES : minY + MAX_VERTS;
+					int maxY = gridY == numGrids - 1 ? NUM_NODES -1: minY + MAX_VERTS;
 					generateGrid(l, face, minX, minY, maxX, maxY);
 					makeMeshes(l, face, gridX, gridY);
+				}
+			}
+		}
+	}
+	std::cout << "Generating collision data" << std::endl;
+	for (int face = 0; face < 6; face++) {
+		//For each grid cell
+		for (int gridX = 0; gridX < numGrids; gridX++) {
+			for (int gridY = 0; gridY < numGrids; gridY++) {
+				PlanetMeshes m = LODS[0][face][gridX][gridY];
+				if (m.grass) {
+					m.grass->createOctree(octDepth);
+				}
+				if (m.sea) {
+					m.sea->createOctree(octDepth);
+				}
+				if (m.rock) {
+					m.rock->createOctree(octDepth);
 				}
 			}
 		}
@@ -91,13 +110,20 @@ void Planet::generateTerrain() {
 }
 
 //Optimise by tracking current + last face, only update visible faces?
+//Start at last centre grid and move out while update needed
+//Only update after sufficient movement
 
 //TODO Handle transformed planets
 
-void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos) {
+void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::vector<Mesh*> &highPoly) {
+	highPoly.clear();
 	glm::vec3 groundLevelPos = glm::normalize(pos) * planetScale;
-	float range = 1.75f * MAX_VERTS * planetScale;
+	float range = 5.0f * glm::quarter_pi<float>() * planetScale / numGrids;
 	range *= range;
+	if (glm::dot(groundLevelPos - lastPos, groundLevelPos - lastPos) < range / 1024.0f) {
+		return;
+	}
+	lastPos = groundLevelPos;
 	//Go over each grid and update lod
 	for (int face = 0; face < 6; face++) {
 		for (int gridX = 0; gridX < numGrids; gridX++) {
@@ -129,6 +155,18 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 					//Update lastLOD
 					lastLOD[face][gridX][gridY] = lod;
 					lastParent = s;
+					if (l == 0) {
+						PlanetMeshes m = LODS[lastLOD[face][gridX][gridY]][face][gridX][gridY];
+						if (m.sea) {
+							highPoly.push_back(m.sea);
+						}
+						if (m.grass) {
+							highPoly.push_back(m.grass);
+						}
+						if (m.rock) {
+							highPoly.push_back(m.rock);
+						}
+					}
 				}
 			}
 		}

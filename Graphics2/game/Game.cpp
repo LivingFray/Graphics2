@@ -7,7 +7,7 @@
 #define SKYBOX_FOLDER "skybox_testing"
 
 #define ATMOS_MIN 2000.0f
-#define ATMOS_MAX 4000.0f
+#define ATMOS_MAX 6000.0f
 
 void loadAssets(Game* game) {
 	std::string folder(SKYBOX_FOLDER);
@@ -20,6 +20,7 @@ void loadAssets(Game* game) {
 	std::cout << "Loading models..." << std::endl;
 	game->player = new Player();
 	game->player->setGame(game);
+	game->player->getShip()->createOctrees(5);
 	game->worldPos = glm::vec3(38000.0f, 0.0f, 0.0f);
 
 	std::cout << "All models loaded" << std::endl;
@@ -33,7 +34,7 @@ void generateTerrain(Game* game) {
 	game->homeWorld->lowLodScale = game->lowLodScale;
 	float lod[] = {2000.0f, 4000.0f, 5000.0f, 20000.0f };
 	game->homeWorld->setLODS(lod);
-	game->homeWorld->generateTerrain();
+	game->homeWorld->generateTerrain(5);
 	std::cout << "Terrain generated" << std::endl;
 }
 
@@ -92,11 +93,22 @@ void Game::keyEvent(GLFWwindow* window, int key, int scancode, int action, int m
 }
 
 void Game::update(double dt) {
+	glm::vec3 oldPos = worldPos;
 	if (player) {
 		player->update(dt);
 		lowLodScene->skyAmount = 1.0f - glm::clamp((glm::length(worldPos) - homeWorld->planetScale - ATMOS_MIN)/(ATMOS_MAX - ATMOS_MIN), 0.0f, 1.0f);
 	}
-	homeWorld->updateVisible(transformedSpace, lowLodScene, worldPos);
+	//Handle movement
+	if (oldPos != worldPos) {
+		std::vector<Mesh*> highPoly;
+		homeWorld->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);
+		for(Mesh* m: highPoly) {
+			if (player->getShip()->collides(m->collisionTree)) {
+				worldPos = oldPos;
+				break;
+			}
+		}
+	}
 }
 
 void Game::draw() {

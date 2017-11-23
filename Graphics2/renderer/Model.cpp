@@ -114,8 +114,24 @@ bool Model::loadModel(const char* path) {
 		m->setShininess(mat.shininess);
 		m->setParent(this);
 		m->setModel(this);
+		meshes.push_back(m);
 	}
 	return true;
+}
+
+void Model::createOctrees(int maxDepth) {
+	for (Mesh* m : meshes) {
+		m->createOctree(maxDepth);
+	}
+}
+
+bool Model::collides(Octree* other) {
+	for (Mesh* m : meshes) {
+		if (m->collides(other)) {
+			return true;
+		}
+	}
+	return false;
 }
 
 void Model::indexVBO(

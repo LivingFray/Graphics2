@@ -141,3 +141,18 @@ void Mesh::setName(string name) {
 void Mesh::setModel(Model* m) {
 	this->model = m;
 }
+
+void Mesh::createOctree(int depth) {
+	if (collisionTree) {
+		delete collisionTree;
+	}
+	collisionTree = new Octree();
+	collisionTree->create(indices, vertices, depth);
+}
+
+bool Mesh::collides(Octree* other) {
+	if (!collisionTree) {
+		return false;
+	}
+	return collisionTree->collides(other);
+}

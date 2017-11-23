@@ -7,6 +7,7 @@ A complex shape loaded from an obj file
 #include "Light.h"
 #include <vector>
 #include <string>
+#include "Octree.h"
 
 using std::vector;
 using std::string;
@@ -38,7 +39,12 @@ public:
 	string getName() { return name; };
 	// Sets the model the mesh belongs to
 	void setModel(Model* m);
+	// Creates an octree for the mesh
+	void createOctree(int depth);
+	// Checks if the octree collides with anything
+	bool collides(Octree* other);
 	bool useNormalTexture;
+	Octree* collisionTree;
 private:
 	vector<unsigned short> indices;
 	vector<glm::vec3> vertices;

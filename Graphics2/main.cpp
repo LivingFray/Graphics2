@@ -71,8 +71,6 @@ int main() {
 			t -= 1.0;
 			//TODO: Display on screen with text
 			std::cout << "FPS: " << frames << std::endl;
-
-			std::cout << game->worldPos.x << ", " << game->worldPos.y << ", " << game->worldPos.z << std::endl;
 			frames = 0;
 		}
 		glfwSwapBuffers(OpenGLSetup::window);

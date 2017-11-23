@@ -7,7 +7,10 @@ A model contains meshes that make up one model
 #include "SceneObject.h"
 #include <tiny_obj_loader.h>
 
+
 using std::vector;
+
+class Mesh;
 
 class Model :
 	public SceneObject {
@@ -16,6 +19,10 @@ public:
 	~Model();
 	// Loads the model from an obj file, returns true on success
 	bool loadModel(const char* path);
+	// Creates octrees for the children of the model
+	void createOctrees(int maxDepth);
+	// Checks if the octree collides with anything
+	bool collides(Octree* other);
 	//"Borrowed" from opengl-tutorials
 	static void indexVBO(
 		std::vector<glm::vec3> & in_vertices,
@@ -71,5 +78,6 @@ private:
 			return true;
 		}
 	}
+	std::vector<Mesh*> meshes;
 };
 

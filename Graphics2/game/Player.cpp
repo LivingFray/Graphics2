@@ -168,7 +168,9 @@ void Player::rotateShip() {
 
 void Player::moveShip(float dt) {
 	//Prevent Floating point errors by moving the world around the ship
-	//Insert futurama quote about moving the universe here
+	//"The engines don't move the ship at all.
+	//The ship stays where it is and the engines move the universe around it"
+	//~C. Farnsworth, Futurama
 	glm::vec3 front = ship->getFront();
 	glm::vec3 right = ship->getRight();
 	if (glfwGetKey(OpenGLSetup::window, MOVE_FORWARD)) {
