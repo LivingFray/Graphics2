@@ -120,10 +120,10 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 	glm::vec3 groundLevelPos = glm::normalize(pos) * planetScale;
 	float range = 5.0f * glm::quarter_pi<float>() * planetScale / numGrids;
 	range *= range;
-	if (glm::dot(groundLevelPos - lastPos, groundLevelPos - lastPos) < range / 1024.0f) {
+	if (glm::dot(pos - lastPos, pos - lastPos) < range / 256.0f) {
 		return;
 	}
-	lastPos = groundLevelPos;
+	lastPos = pos;
 	//Go over each grid and update lod
 	for (int face = 0; face < 6; face++) {
 		for (int gridX = 0; gridX < numGrids; gridX++) {
@@ -155,7 +155,7 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 					//Update lastLOD
 					lastLOD[face][gridX][gridY] = lod;
 					lastParent = s;
-					if (l == 0) {
+					if (lod == 0) {
 						PlanetMeshes m = LODS[lastLOD[face][gridX][gridY]][face][gridX][gridY];
 						if (m.sea) {
 							highPoly.push_back(m.sea);

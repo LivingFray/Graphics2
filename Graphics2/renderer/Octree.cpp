@@ -64,12 +64,14 @@ void Octree::divide(std::vector<unsigned short> &indices, std::vector<glm::vec3>
 	float midY = (minY + maxY) / 2;
 	float midZ = (minZ + maxZ) / 2;
 	std::vector<unsigned short> split[8];
+	//Try linked list after?
 	//---,--+,-+-,-++,+--,+-+,++-,+++
 	for (unsigned int i = 0; i < indices.size(); i+=3) {
-		unsigned short p[3];
-		p[0] = indices[i + 0];
-		p[1] = indices[i + 1];
-		p[2] = indices[i + 2];
+		std::vector<glm::vec3> p;
+		p.resize(3);
+		p[0] = points[indices[i + 0]];
+		p[1] = points[indices[i + 1]];
+		p[2] = points[indices[i + 2]];
 		for (int x = 0; x < 2; x++) {
 			float xMin = x == 0 ? minX : midX;
 			float xMax = x == 0 ? midX : maxX;
@@ -79,10 +81,10 @@ void Octree::divide(std::vector<unsigned short> &indices, std::vector<glm::vec3>
 				for (int z = 0; z < 2; z++) {
 					float zMin = z == 0 ? minZ : midZ;
 					float zMax = z == 0 ? midZ : maxZ;
-					if (containsTriangle(p, points, xMin, xMax, yMin, yMax, zMin, zMax)) {
-						split[x * 4 + y * 2 + z].push_back(p[0]);
-						split[x * 4 + y * 2 + z].push_back(p[1]);
-						split[x * 4 + y * 2 + z].push_back(p[2]);
+					if (containsTriangle(p, xMin, xMax, yMin, yMax, zMin, zMax)) {
+						split[x * 4 + y * 2 + z].push_back(indices[i + 0]);
+						split[x * 4 + y * 2 + z].push_back(indices[i + 1]);
+						split[x * 4 + y * 2 + z].push_back(indices[i + 2]);
 					}
 				}
 			}
@@ -112,11 +114,7 @@ bool Octree::collides(Octree* other) {
 	return false;
 }
 
-bool Octree::containsTriangle(unsigned short (&p)[3], std::vector<glm::vec3> &points, float xMin, float xMax, float yMin, float yMax, float zMin, float zMax) {
-	std::vector<glm::vec3> tri;
-	for (int i = 0; i < 3; i++) {
-		tri.push_back(points[p[i]]);
-	}
+bool Octree::containsTriangle(std::vector<glm::vec3> &tri, float xMin, float xMax, float yMin, float yMax, float zMin, float zMax) {
 	//Test AABB normals first
 	glm::vec3 norms[3] = {
 		glm::vec3(1,0,0), //X
@@ -125,8 +123,9 @@ bool Octree::containsTriangle(unsigned short (&p)[3], std::vector<glm::vec3> &po
 	};
 	float min, max;
 	std::vector<glm::vec3> aabb;
-	aabb.push_back(glm::vec3(xMin, yMin, zMin));
-	aabb.push_back(glm::vec3(xMax, yMax, zMax));
+	aabb.resize(2);
+	aabb[0] = glm::vec3(xMin, yMin, zMin);
+	aabb[1] = glm::vec3(xMax, yMax, zMax);
 	//Project onto each cardinal direction and check for overlaps
 	for (int i = 0; i < 3; i++) {
 		project(tri, norms[i], min, max);
@@ -147,25 +146,28 @@ bool Octree::containsTriangle(unsigned short (&p)[3], std::vector<glm::vec3> &po
 		tri[1] - tri[2],
 		tri[2] - tri[0]
 	};
+
 	float min2, max2;
-	for (int i = 0; i < 3; i++)
+	for (int i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
 			glm::vec3 axis = glm::cross(triEdges[i], norms[j]);
 			project(aabb, axis, min, max);
 			project(tri, axis, min2, max2);
-			if (max <= min2 || min >= max2)
+			if (max <= min2 || min >= max2) {
 				return false;
+			}
 		}
+	}
 	//Every projection failed, so must intersect
 	return true;
 }
 
-void Octree::project(std::vector<glm::vec3> points, glm::vec3 axis, float &min, float &max) {
-	double min = INFINITY;
-	double max = -INFINITY;
+void Octree::project(std::vector<glm::vec3> &points, glm::vec3 &axis, float &min, float &max) {
+	min = INFINITY;
+	max = -INFINITY;
 	for(glm::vec3 p: points) {
 		float val = glm::dot(axis, p);
-		if (val < min) min = val;
-		if (val > max) max = val;
+		if (val < min) { min = val; }
+		if (val > max) { max = val; }
 	}
 }

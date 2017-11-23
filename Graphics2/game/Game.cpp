@@ -49,7 +49,7 @@ Game::Game() {
 	std::cout << "Loading lighting..." << std::endl;
 	scene->ambientLight = glm::vec3(0.2f);
 	sunLight = new DirectionalLight();
-	sunLight->colour = glm::vec3(0.6f, 0.6f, 0.6f);
+	sunLight->colour = glm::vec3(0.8f, 0.8f, 0.8f);
 	sunLight->direction = glm::vec3(0.0f, -1.0f, 0.0f);
 	sunLight->setParent(scene);
 	//Terrain
@@ -60,10 +60,12 @@ Game::Game() {
 	lowLodCam->setFar(1000.0f);
 	lowLodCam->setParent(lowLodScene);
 	lowSunLight = new DirectionalLight();
-	lowSunLight->colour = glm::vec3(0.6f, 0.6f, 0.6f);
+	lowSunLight->colour = glm::vec3(0.8f, 0.8f, 0.68);
 	lowSunLight->direction = glm::vec3(0.0f, -1.0f, 0.0f);
-	lowSunLight->setParent(lowLodCam);
-	lowLodScene->ambientLight = glm::vec3(1.0f, 1.0f, 1.0f);
+	lowSunLight->setParent(lowLodScene);
+	//lowLodScene->ambientLight = glm::vec3(1.0f, 1.0f, 1.0f);
+	//Update visible geometry
+	forceVisualUpdate = true;
 }
 
 
@@ -99,7 +101,7 @@ void Game::update(double dt) {
 		lowLodScene->skyAmount = 1.0f - glm::clamp((glm::length(worldPos) - homeWorld->planetScale - ATMOS_MIN)/(ATMOS_MAX - ATMOS_MIN), 0.0f, 1.0f);
 	}
 	//Handle movement
-	if (oldPos != worldPos) {
+	if (forceVisualUpdate || oldPos != worldPos) {
 		std::vector<Mesh*> highPoly;
 		homeWorld->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);
 		for(Mesh* m: highPoly) {
@@ -108,6 +110,7 @@ void Game::update(double dt) {
 				break;
 			}
 		}
+		forceVisualUpdate = false;
 	}
 }
 

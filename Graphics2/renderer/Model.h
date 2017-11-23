@@ -5,6 +5,7 @@ A model contains meshes that make up one model
 #include "OpenGLSetup.h"
 #include <vector>
 #include "SceneObject.h"
+#include "Octree.h"
 #include <tiny_obj_loader.h>
 
 

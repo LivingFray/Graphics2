@@ -16,6 +16,6 @@ public:
 private:
 	float minX, minY, minZ, maxX, maxY, maxZ;
 	std::vector<Octree*> children;
-	bool containsTriangle(unsigned short (&p)[3], std::vector<glm::vec3> &points, float xMin, float xMax, float yMin, float yMax, float zMin, float zMax);
-	void project(std::vector<glm::vec3> points, glm::vec3 axis, float &min, float &max);
+	bool containsTriangle(std::vector<glm::vec3> &tri, float xMin, float xMax, float yMin, float yMax, float zMin, float zMax);
+	void project(std::vector<glm::vec3> &points, glm::vec3 &axis, float &min, float &max);
 };

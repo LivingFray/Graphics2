@@ -22,5 +22,6 @@ private:
 	Camera* lowLodCam;
 	Scene* lowLodScene;
 	SceneObject* transformedSpace;
+	bool forceVisualUpdate;
 };
 
