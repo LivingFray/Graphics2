@@ -23,7 +23,7 @@ public:
 	// Creates octrees for the children of the model
 	void createOctrees(int maxDepth);
 	// Checks if the octree collides with anything
-	bool collides(Octree* other);
+	bool collides(Octree* other, glm::mat4 &otherTrans);
 	//"Borrowed" from opengl-tutorials
 	static void indexVBO(
 		std::vector<glm::vec3> & in_vertices,

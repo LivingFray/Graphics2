@@ -32,9 +32,9 @@ void generateTerrain(Game* game) {
 	game->homeWorld = new Planet();
 	game->homeWorld->planetScale = 30000.0f;
 	game->homeWorld->lowLodScale = game->lowLodScale;
-	float lod[] = {2000.0f, 4000.0f, 5000.0f, 20000.0f };
+	float lod[] = {2000.0f, 3000.0f, 4000.0f, 20000.0f };
 	game->homeWorld->setLODS(lod);
-	game->homeWorld->generateTerrain(5);
+	game->homeWorld->generateTerrain(3);
 	std::cout << "Terrain generated" << std::endl;
 }
 
@@ -95,6 +95,7 @@ void Game::keyEvent(GLFWwindow* window, int key, int scancode, int action, int m
 }
 
 void Game::update(double dt) {
+	//TODO: Change strength of light depending on occlusion of planet
 	glm::vec3 oldPos = worldPos;
 	if (player) {
 		player->update(dt);
@@ -102,10 +103,9 @@ void Game::update(double dt) {
 	}
 	//Handle movement
 	if (forceVisualUpdate || oldPos != worldPos) {
-		std::vector<Mesh*> highPoly;
 		homeWorld->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);
 		for(Mesh* m: highPoly) {
-			if (player->getShip()->collides(m->collisionTree)) {
+			if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
 				worldPos = oldPos;
 				break;
 			}

@@ -103,6 +103,11 @@ void Mesh::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
 	glUniformMatrix4fv(glGetUniformLocation(program, "lightSpaceMatrix"), 1, false, &LSM[0][0]);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
+
+	//if (collisionTree) {
+	//	collisionTree->draw(this->getGlobalMatrix(), cam);
+	//}
+
 }
 
 void Mesh::renderShadow(GLuint p) {
@@ -150,9 +155,9 @@ void Mesh::createOctree(int depth) {
 	collisionTree->create(indices, vertices, depth);
 }
 
-bool Mesh::collides(Octree* other) {
+bool Mesh::collides(Octree* other, glm::mat4 &otherTrans) {
 	if (!collisionTree) {
 		return false;
 	}
-	return collisionTree->collides(other);
+	return collisionTree->collides(other, getGlobalMatrix(), otherTrans);
 }

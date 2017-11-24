@@ -116,13 +116,13 @@ void Planet::generateTerrain(int octDepth) {
 //TODO Handle transformed planets
 
 void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::vector<Mesh*> &highPoly) {
-	highPoly.clear();
 	glm::vec3 groundLevelPos = glm::normalize(pos) * planetScale;
 	float range = 5.0f * glm::quarter_pi<float>() * planetScale / numGrids;
 	range *= range;
 	if (glm::dot(pos - lastPos, pos - lastPos) < range / 256.0f) {
 		return;
 	}
+	highPoly.clear();
 	lastPos = pos;
 	//Go over each grid and update lod
 	for (int face = 0; face < 6; face++) {
@@ -155,17 +155,18 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 					//Update lastLOD
 					lastLOD[face][gridX][gridY] = lod;
 					lastParent = s;
-					if (lod == 0) {
-						PlanetMeshes m = LODS[lastLOD[face][gridX][gridY]][face][gridX][gridY];
-						if (m.sea) {
-							highPoly.push_back(m.sea);
-						}
-						if (m.grass) {
-							highPoly.push_back(m.grass);
-						}
-						if (m.rock) {
-							highPoly.push_back(m.rock);
-						}
+				}
+				//Update collidable surfaces
+				if (lod == 0) {
+					PlanetMeshes m = LODS[lastLOD[face][gridX][gridY]][face][gridX][gridY];
+					if (m.sea) {
+						highPoly.push_back(m.sea);
+					}
+					if (m.grass) {
+						highPoly.push_back(m.grass);
+					}
+					if (m.rock) {
+						highPoly.push_back(m.rock);
 					}
 				}
 			}
@@ -685,19 +686,17 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 	bool addLand = false;
 	bool addRock = false;
 	//Count how many vertices are land height(-) and how many are rock height(+)
-	int landVsRock = 0;
+	float averageHeight = 0;
 	for (int i = 0; i < 3; i++) {
 		float h = getNode(f, xs[i], ys[i]);
 		if (h < HEIGHT_SEA) {
 			addSea = true;
-		} else if(h > HEIGHT_ROCK) {
-			landVsRock++;
 		} else {
-			landVsRock--;
+			addLand = true;
 		}
+		averageHeight += h;
 	}
-	addLand = landVsRock <= 0;
-	addRock = landVsRock > 0;
+	addRock = averageHeight / 3.0f > HEIGHT_ROCK;
 	//If any point is below sea level add all to sea (setting height to sea level)
 	if (addSea) {
 		for (int i = 0; i < 3; i++) {
@@ -712,26 +711,26 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 	}
 	//If any point is above sea level add to land
 	if (addLand) {
-		for (int i = 0; i < 3; i++) {
-			glm::vec3 v = getVertex(xs[i], ys[i], f);
-			if (l != 0) {
-				v *= lowLodScale;
+		if (addRock) {
+			for (int i = 0; i < 3; i++) {
+				glm::vec3 v = getVertex(xs[i], ys[i], f);
+				if (l != 0) {
+					v *= lowLodScale;
+				}
+				vert_rock.push_back(v);
+				uv_rock.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+				norm_rock.push_back(glm::normalize(v));
 			}
-			vert_land.push_back(v);
-			uv_land.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-			norm_land.push_back(glm::normalize(v));
-		}
-	}
-	//If any point is a mountain add to rock
-	if (addRock) {
-		for (int i = 0; i < 3; i++) {
-			glm::vec3 v = getVertex(xs[i], ys[i], f);
-			if (l != 0) {
-				v *= lowLodScale;
+		} else {
+			for (int i = 0; i < 3; i++) {
+				glm::vec3 v = getVertex(xs[i], ys[i], f);
+				if (l != 0) {
+					v *= lowLodScale;
+				}
+				vert_land.push_back(v);
+				uv_land.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
+				norm_land.push_back(glm::normalize(v));
 			}
-			vert_rock.push_back(v);
-			uv_rock.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-			norm_rock.push_back(glm::normalize(v));
 		}
 	}
 }

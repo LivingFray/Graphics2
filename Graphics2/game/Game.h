@@ -23,5 +23,6 @@ private:
 	Scene* lowLodScene;
 	SceneObject* transformedSpace;
 	bool forceVisualUpdate;
+	std::vector<Mesh*> highPoly;
 };
 

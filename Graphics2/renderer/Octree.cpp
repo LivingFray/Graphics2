@@ -9,6 +9,9 @@ Octree::Octree() {
 	maxX = -INFINITY;
 	maxY = -INFINITY;
 	maxZ = -INFINITY;
+//	shader = Shader("shaders/solid.vert", "shaders/solid.frag");
+//	glGenVertexArrays(1, &vertexArray);
+//	glGenBuffers(1, &vertexBuffer);
 }
 
 
@@ -53,6 +56,16 @@ void Octree::divide(std::vector<unsigned short> &indices, std::vector<glm::vec3>
 	this->maxY = maxY;
 	this->minZ = minZ;
 	this->maxZ = maxZ;
+	coords.resize(8);
+	coords[0] = glm::vec3(minX, minY, minZ);
+	coords[1] = glm::vec3(minX, minY, maxZ);
+	coords[2] = glm::vec3(minX, maxY, minZ);
+	coords[3] = glm::vec3(minX, maxY, maxZ);
+	coords[4] = glm::vec3(maxX, minY, minZ);
+	coords[5] = glm::vec3(maxX, minY, maxZ);
+	coords[6] = glm::vec3(maxX, maxY, minZ);
+	coords[7] = glm::vec3(maxX, maxY, maxZ);
+
 	//If depth = 0: Leaf node
 	if (depth == 0) {
 		return;
@@ -108,11 +121,65 @@ void Octree::divide(std::vector<unsigned short> &indices, std::vector<glm::vec3>
 			}
 		}
 	}
+//	glBindVertexArray(vertexArray);
+//	//Pass vertices
+//	glEnableVertexAttribArray(0);
+//	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+//	glBufferData(GL_ARRAY_BUFFER, coords.size() * sizeof(glm::vec3), &coords[0], GL_STATIC_DRAW);
+//	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 }
 
-bool Octree::collides(Octree* other) {
+bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans) {
+	/* TRANSLATED PSEUDOCODE FROM LECTURES (so don't blame me if its wrong)
+	If NOT overlap(this, other) return false
+	else if leaf(this)
+		if leaf(other)
+			TRI COLLISION (maybe skip?), return true
+		else
+			for each child of other
+				if this->collides(child)
+					return true
+	else
+		for each child of this
+			if child->collides(other)
+				return true
+	return false
+	*/
+	if (!overlaps(other, trans, otherTrans)) {
+		return false;
+	}
+	if (children.size() == 0) {
+		if (other->children.size() == 0) {
+			return true;
+		} else {
+			for (Octree* o : other->children) {
+				if (this->collides(o, trans, otherTrans)) {
+					return true;
+				}
+			}
+		}
+	} else {
+		for (Octree* o : this->children) {
+			if (o->collides(other, trans, otherTrans)) {
+				return true;
+			}
+		}
+	}
 	return false;
 }
+
+//void Octree::draw(glm::mat4 &trans, Camera* cam) {
+//	glUseProgram(shader.getProgram());
+//	glBindVertexArray(vertexArray);
+//	glUniformMatrix4fv(glGetUniformLocation(shader.getProgram(), "model"), 1, false, &(trans)[0][0]);
+//	glUniformMatrix4fv(glGetUniformLocation(shader.getProgram(), "view"), 1, false, &(cam->getView())[0][0]);
+//	glUniformMatrix4fv(glGetUniformLocation(shader.getProgram(), "projection"), 1, false, &(cam->getProjection())[0][0]);
+//	glDrawArrays(GL_LINES, 0, coords.size());
+//	glUseProgram(0);
+//	for (Octree* child : children) {
+//		child->draw(trans, cam);
+//	}
+//}
 
 bool Octree::containsTriangle(std::vector<glm::vec3> &tri, float xMin, float xMax, float yMin, float yMax, float zMin, float zMax) {
 	//Test AABB normals first
@@ -170,4 +237,68 @@ void Octree::project(std::vector<glm::vec3> &points, glm::vec3 &axis, float &min
 		if (val < min) { min = val; }
 		if (val > max) { max = val; }
 	}
+}
+
+bool Octree::overlaps(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans) {
+	glm::vec4 norms[] = {
+		glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+		glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+	};
+	//Project vertices onto each normal and test for intersection
+	std::vector<glm::vec3> thisCoords;
+	for (glm::vec3 c : coords) {
+		thisCoords.push_back(glm::vec3(trans * glm::vec4(c, 1.0f)));
+	}
+	std::vector<glm::vec3> otherCoords;
+	for (glm::vec3 c : other->coords) {
+		otherCoords.push_back(glm::vec3(otherTrans * glm::vec4(c, 1.0f)));
+	}
+	for (int i = 0; i < 3; i++) {
+		float min, max, min2, max2;
+		glm::vec3 axis = glm::vec3(trans * norms[i]);
+		project(thisCoords, axis, min, max);
+		project(otherCoords, axis, min2, max2);
+		//No overlap
+		if (max <= min2 || min >= max2) {
+			return false;
+		}
+		axis = glm::vec3(otherTrans * norms[i]);
+		project(thisCoords, axis, min, max);
+		project(otherCoords, axis, min2, max2);
+		//No overlap
+		if (max <= min2 || min >= max2) {
+			return false;
+		}
+	}
+	//Cross each edge of 1 with the edge of the other and test for line
+	glm::vec3 edgesThis[] = {
+		//--- to +--
+		thisCoords[4 * 1 + 2 * 0 + 0] - thisCoords[4 * 0 + 2 * 0 + 0],
+		//--- to -+-
+		thisCoords[4 * 0 + 2 * 1 + 0] - thisCoords[4 * 0 + 2 * 0 + 0],
+		//--- to --+
+		thisCoords[4 * 0 + 2 * 0 + 1] - thisCoords[4 * 0 + 2 * 0 + 0],
+	};
+	glm::vec3 edgesOther[] = {
+		//--- to +--
+		otherCoords[4 * 1 + 2 * 0 + 0] - otherCoords[4 * 0 + 2 * 0 + 0],
+		//--- to -+-
+		otherCoords[4 * 0 + 2 * 1 + 0] - otherCoords[4 * 0 + 2 * 0 + 0],
+		//--- to --+
+		otherCoords[4 * 0 + 2 * 0 + 1] - otherCoords[4 * 0 + 2 * 0 + 0],
+	};
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			glm::vec3 axis = glm::cross(edgesThis[i], edgesOther[i]);
+			float min, max, min2, max2;
+			project(thisCoords, axis, min, max);
+			project(otherCoords, axis, min2, max2);
+			//No overlap
+			if (max <= min2 || min >= max2) {
+				return false;
+			}
+		}
+	}
+	return true;
 }

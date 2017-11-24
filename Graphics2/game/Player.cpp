@@ -163,7 +163,6 @@ void Player::rotateShip() {
 		static_cast<double>(h) / 2.0
 	);
 	ship->setRotation(ship->getRotation() * glm::quat(glm::vec3(-my * MOUSE_SPEED, -mx * MOUSE_SPEED, 0.0f)));
-
 }
 
 void Player::moveShip(float dt) {
