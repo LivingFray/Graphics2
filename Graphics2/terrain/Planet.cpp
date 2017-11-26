@@ -5,9 +5,7 @@
 #include <iostream>
 
 //Generator settings
-//For testing use low LOD
-///////////////////////////////////////////////////////////////////////////////INCREASE: WAS 7, If loading time is fixed bump up more
-#define NODES_EXP 4
+#define NODES_EXP 7
 #define NUM_NODES ((1 << NODES_EXP) + 1)
 #define MIN_Y (-0.15f)
 #define MAX_Y 0.15f
@@ -78,17 +76,18 @@ void Planet::generateTerrain(int octDepth) {
 			//For each grid cell
 			for (int gridX = 0; gridX < numGrids; gridX++) {
 				int minX = MAX_VERTS * gridX;
-				int maxX = gridX == numGrids - 1 ? NUM_NODES -1: minX + MAX_VERTS;
+				int maxX = gridX == numGrids - 1 ? NUM_NODES - 1 : minX + MAX_VERTS;
 				for (int gridY = 0; gridY < numGrids; gridY++) {
 					//Calculate bounds of the grid
 					int minY = MAX_VERTS * gridY;
-					int maxY = gridY == numGrids - 1 ? NUM_NODES -1: minY + MAX_VERTS;
+					int maxY = gridY == numGrids - 1 ? NUM_NODES - 1 : minY + MAX_VERTS;
 					generateGrid(l, face, minX, minY, maxX, maxY);
 					makeMeshes(l, face, gridX, gridY);
 				}
 			}
 		}
 	}
+	/*
 	std::cout << "Generating collision data" << std::endl;
 	for (int face = 0; face < 6; face++) {
 		//For each grid cell
@@ -107,6 +106,7 @@ void Planet::generateTerrain(int octDepth) {
 			}
 		}
 	}
+	//*/
 }
 
 //Optimise by tracking current + last face, only update visible faces?
@@ -116,62 +116,174 @@ void Planet::generateTerrain(int octDepth) {
 //TODO Handle transformed planets
 
 void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::vector<Mesh*> &highPoly) {
-	glm::vec3 groundLevelPos = glm::normalize(pos) * planetScale;
-	float range = 5.0f * glm::quarter_pi<float>() * planetScale / numGrids;
-	range *= range;
-	if (glm::dot(pos - lastPos, pos - lastPos) < range / 256.0f) {
-		return;
+	//Starting at current grid move out in each direction and change visibility if need be
+	//
+	//
+	//
+	//
+	//Convert position from sphere to cube
+	glm::vec3 unitPos = glm::normalize(pos);
+	float cubeScaling = 1.0f / glm::max(glm::max(abs(unitPos.x), abs(unitPos.y)), abs(unitPos.z));
+	glm::vec3 cubeMapping = cubeScaling * unitPos;
+	//Determine face position is on
+	int face;
+	if (cubeMapping.x < -1.0f + 1e-5f) {
+		face = FACE_NEG_X;
+	} else if (cubeMapping.x > 1.0f - 1e-5f) {
+		face = FACE_POS_X;
+	} else if (cubeMapping.y < -1.0f + 1e-5f) {
+		face = FACE_NEG_Y;
+	} else if (cubeMapping.y > 1.0f - 1e-5f) {
+		face = FACE_POS_Y;
+	} else if (cubeMapping.z < -1.0f + 1e-5f) {
+		face = FACE_NEG_Z;
+	} else if (cubeMapping.z > 1.0f - 1e-5f) {
+		face = FACE_POS_Z;
 	}
-	highPoly.clear();
-	lastPos = pos;
-	//Go over each grid and update lod
-	for (int face = 0; face < 6; face++) {
-		for (int gridX = 0; gridX < numGrids; gridX++) {
-			int cX = gridX * MAX_VERTS + MAX_VERTS / 2;
-			if (gridX == numGrids - 1) {
-				cX = gridX * MAX_VERTS + (NUM_NODES - gridX * MAX_VERTS) / 2;
+	//Get axes needed to calculate grid position
+	float xTrans;
+	float yTrans;
+	switch (face) {
+	case FACE_NEG_X:
+		xTrans = cubeMapping.y;
+		yTrans = cubeMapping.z;
+		break;
+	case FACE_POS_X:
+		xTrans = cubeMapping.y;
+		yTrans = -cubeMapping.z;
+		break;
+	case FACE_NEG_Y:
+		xTrans = cubeMapping.z;
+		yTrans = cubeMapping.x;
+		break;
+	case FACE_POS_Y:
+		xTrans = -cubeMapping.z;
+		yTrans = cubeMapping.x;
+		break;
+	case FACE_NEG_Z:
+		xTrans = cubeMapping.y;
+		yTrans = -cubeMapping.x;
+		break;
+	case FACE_POS_Z:
+		xTrans = cubeMapping.y;
+		yTrans = cubeMapping.x;
+		break;
+	default:
+		xTrans = 0.0f;
+		yTrans = 0.0f;
+	}
+	//Get grid position from pos
+	int gridX = glm::clamp(static_cast<int>(floor((numGrids - 1) * (xTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
+	int gridY = glm::clamp(static_cast<int>(floor((numGrids - 1) * (yTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
+	//Starting at gridX, gridY move out updating visibility if needed
+	bool changed;
+	int size = 1;
+	do {
+		changed = false;
+		//Initial position
+		int x = gridX - size / 2;
+		int y = gridY - size / 2;
+		int f = face;
+		//Which direction to move through the nodes
+		int addX = 1;
+		int addY = 0;
+		int numToUpdate = size * size - (size - 2) * (size - 2);
+		if (size == 1) {
+			numToUpdate = 1;
+		}
+		for (int i = 0; i < numToUpdate; i++) {
+			//Ensure grid coords are for correct face
+			x *= MAX_VERTS;
+			y *= MAX_VERTS;
+			moveInBounds(f, x, y);
+			x /= MAX_VERTS;
+			y /= MAX_VERTS;
+			//Get centre node
+			int dX = MAX_VERTS;
+			int dY = MAX_VERTS;
+			if (x == numGrids - 1) {
+				dX = NUM_NODES - x * MAX_VERTS;
 			}
-			for (int gridY = 0; gridY < numGrids; gridY++) {
-				int cY = gridY * MAX_VERTS + MAX_VERTS / 2;
-				if (gridY == numGrids - 1) {
-					cY = gridY * MAX_VERTS + (NUM_NODES - gridY * MAX_VERTS) / 2;
-				}
-				int lod = NUM_LOD - 1;
-				glm::vec3 lowOff = pos - getVertex(cX, cY, face);
-				float distSqr = glm::dot(lowOff, lowOff);
-				glm::vec3 off = groundLevelPos - getVertex(cX, cY, face, 0.0f);
-				//Close grids have LOD calculated purely on vertical height
-				if (glm::dot(off, off) < range) {
-					off = groundLevelPos - pos;
-					distSqr = glm::dot(off, off);
-				}
-				while (LOD_Distances[lod] > distSqr && lod>0) { lod--; }
-				SceneObject* s = lod == 0 ? highLod : lowLod;
-				if (lod != lastLOD[face][gridX][gridY] || s != lastParent) {
-					//Hide old LOD
-					changeParent(LODS[lastLOD[face][gridX][gridY]][face][gridX][gridY], NULL);
-					//Set new LOD visible
-					changeParent(LODS[lod][face][gridX][gridY], s);
-					//Update lastLOD
-					lastLOD[face][gridX][gridY] = lod;
-					lastParent = s;
-				}
-				//Update collidable surfaces
-				if (lod == 0) {
-					PlanetMeshes m = LODS[lastLOD[face][gridX][gridY]][face][gridX][gridY];
-					if (m.sea) {
-						highPoly.push_back(m.sea);
+			if (y == numGrids - 1) {
+				dY = NUM_NODES - y * MAX_VERTS;
+			}
+			int cX = x * MAX_VERTS + dX / 2;
+			int cY = y * MAX_VERTS + dY / 2;
+			float distSqr;
+			glm::vec3 centre = getVertex(cX, cY, f, HEIGHT_SEA);
+			glm::vec3 diff = centre - pos;
+			distSqr = glm::dot(diff, diff);
+			for (int x2 = -1; x < 2; x+=2) {
+				for (int y2 = -1; y < 2; y+=2) {
+					glm::vec3 point = getVertex(x * MAX_VERTS + dX * x2, y * MAX_VERTS + dY * y2, f, HEIGHT_SEA);
+					diff = point - pos;
+					float dist = glm::dot(diff, diff);
+					if (dist < distSqr) {
+						distSqr = dist;
 					}
+				}
+			}
+			int lod = NUM_LOD - 1;
+			//Invisible grid
+			if (glm::dot(centre, pos) < 0.0f) {
+				lod = -1;
+			}
+			while (lod > 0 && distSqr < LOD_Distances[lod]) { lod--; }
+			//Change in LOD found
+			if (lastLOD[f][x][y] != lod) {
+				changed = true;
+				PlanetMeshes m;
+				SceneObject* s = NULL;
+				//Hide old meshes
+				if (lastLOD[f][x][y] >= 0) {
+					m = LODS[lastLOD[f][x][y]][f][x][y];
 					if (m.grass) {
-						highPoly.push_back(m.grass);
+						m.grass->setParent(s);
+					}
+					if (m.sea) {
+						m.sea->setParent(s);
 					}
 					if (m.rock) {
-						highPoly.push_back(m.rock);
+						m.rock->setParent(s);
 					}
 				}
+				//Show new meshes
+				if (lod >= 0) {
+					m = LODS[lod][f][x][y];
+					if (lod == 0) {
+						s = highLod;
+					} else if (lod > 0) {
+						s = lowLod;
+					}
+					if (m.grass) {
+						m.grass->setParent(s);
+					}
+					if (m.sea) {
+						m.sea->setParent(s);
+					}
+					if (m.rock) {
+						m.rock->setParent(s);
+					}
+				}
+				//Update last LOD
+				lastLOD[f][x][y] = lod;
 			}
+			//Get next grid
+			if (i == size - 1) {
+				addX = 0;
+				addY = 1;
+			} else if (i == (size - 1) * 2) {
+				addX = -1;
+				addY = 0;
+			} else if (i == (size - 1) * 3) {
+				addX = 0;
+				addY = -1;
+			}
+			x += addX;
+			y += addY;
 		}
-	}
+		size += 2;
+	} while (changed || size <= 3);
 }
 
 void Planet::setLODS(float lods[NUM_LOD]) {
@@ -666,7 +778,7 @@ glm::vec3 Planet::getVertex(int x, int y, int face, float height) {
 	return p;
 }
 
-void Planet::addTriangle(int l, int f, int (&xs)[6], int (&ys)[6]) {
+void Planet::addTriangle(int l, int f, int(&xs)[6], int(&ys)[6]) {
 	bool addSea = false;
 	bool addLand = false;
 	bool addRock = false;
@@ -683,9 +795,6 @@ void Planet::addTriangle(int l, int f, int (&xs)[6], int (&ys)[6]) {
 	}
 	addRock = averageHeight / 3.0f > HEIGHT_ROCK;
 	//If any point is below sea level add all to sea (setting height to sea level)
-	//for (int i = 0; i < 3; i++) {
-	//	moveInBounds(f, xs[i], ys[i]);
-	//}
 	if (addSea) {
 		for (int i = 0; i < 3; i++) {
 			unsigned short pos = xs[i + 3] + (nodesInGrid + 1) * ys[i + 3];

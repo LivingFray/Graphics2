@@ -32,7 +32,7 @@ void generateTerrain(Game* game) {
 	game->homeWorld = new Planet();
 	game->homeWorld->planetScale = 30000.0f;
 	game->homeWorld->lowLodScale = game->lowLodScale;
-	float lod[] = {2000.0f, 3000.0f, 4000.0f, 20000.0f };
+	float lod[] = {2000.0f, 4000.0f, 8000.0f, 16000.0f };
 	game->homeWorld->setLODS(lod);
 	game->homeWorld->generateTerrain(3);
 	std::cout << "Terrain generated" << std::endl;
@@ -104,12 +104,14 @@ void Game::update(double dt) {
 	//Handle movement
 	if (forceVisualUpdate || oldPos != worldPos) {
 		homeWorld->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);
+		/*
 		for(Mesh* m: highPoly) {
 			if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
 				worldPos = oldPos;
 				break;
 			}
 		}
+		//*/
 		forceVisualUpdate = false;
 	}
 }
