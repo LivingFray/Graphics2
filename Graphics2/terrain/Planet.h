@@ -37,10 +37,11 @@ private:
 	void inline generateGrid(int l, int face, int minX, int minY, int maxX, int maxY);
 	void inline makeMeshes(int l, int face, int gridX, int gridY);
 	void inline setNode(float value, unsigned int face, unsigned int x, unsigned int y);
+	void moveInBounds(int &face, int &x, int &y);
 	float getNode(int face, int x, int y);
 	glm::vec3 inline getVertex(int x, int y, int face);
 	glm::vec3 inline getVertex(int x, int y, int face, float height);
-	void inline addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]);
+	void inline addTriangle(int l, int f, int (&xs)[6], int (&ys)[6]);
 
 
 	//LOD helper function
@@ -49,18 +50,15 @@ private:
 	std::vector<std::vector<std::vector<float>>> heightmap;
 	glm::mat4 faceTrans[6];
 	//Vertices for different biomes
+	std::vector<unsigned short> ind_sea;
+	std::vector<unsigned short> ind_land;
+	std::vector<unsigned short> ind_rock;
 	std::vector<glm::vec3> vert_sea;
 	std::vector<glm::vec3> vert_land;
 	std::vector<glm::vec3> vert_rock;
-	std::vector<glm::vec2> uv_sea;
-	std::vector<glm::vec2> uv_land;
-	std::vector<glm::vec2> uv_rock;
-	std::vector<glm::vec3> norm_sea;
-	std::vector<glm::vec3> norm_land;
-	std::vector<glm::vec3> norm_rock;
-	//Companion information for vertices
-	std::vector<glm::vec3> tan;
-	std::vector<glm::vec3> bitan;
+	std::vector<glm::vec2> uv;
+	std::vector<glm::vec3> norm;
+	int nodesInGrid;
 
 	//Store the meshes at different Level of Detail
 	//LOD       Face        GridX       GridY       Meshes

@@ -261,64 +261,86 @@ inline void Planet::generateGrid(int l, int f, int minX, int minY, int maxX, int
 	int step = 1 << l;
 	int nodesX = (maxX - minX) / step;
 	int nodesY = (maxY - minY) / step;
+	float scale = l == 0 ? 1.0f : lowLodScale;
+	nodesInGrid = nodesX;
+	//Generate arrays for vertex data
 	for (int y = 0; y <= nodesY; y++) {
+		int lY = y * step + minY;
+		for (int x = 0; x <= nodesX; x++) {
+			int lX = x * step + minX;
+			vert_sea.push_back(getVertex(lX, lY, f, HEIGHT_SEA) * scale);
+			glm::vec3 v = getVertex(lX, lY, f);
+			vert_land.push_back(v * scale);
+			uv.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(lX) / (NUM_NODES), static_cast<float>(lY) / (NUM_NODES)));
+			norm.push_back(glm::normalize(v));
+		}
+	}
+	for (int y = 0; y <= nodesY; y++) {
+		int lY = y * step + minY;
 		for (int x = y % 2; x <= nodesX; x += 2) {
 			//Transform (x,y) to correct LOD
 			int lX = x * step + minX;
-			int lY = y * step + minY;
-			int xs[3];
-			int ys[3];
+			int xs[6];
+			int ys[6];
+			xs[0] = lX;
+			ys[0] = lY;
+			xs[3] = x;
+			ys[3] = y;
 			if (x > 0) {
 				if (y > 0) {
-					//Pos
-					xs[0] = lX;
-					ys[0] = lY;
 					//Negative Y
 					xs[1] = lX;
 					ys[1] = lY - step;
+					xs[4] = x;
+					ys[4] = y - 1;
 					//Negative X
 					xs[2] = lX - step;
 					ys[2] = lY;
+					xs[5] = x - 1;
+					ys[5] = y;
 					addTriangle(l, f, xs, ys);
 				}
 				if (y < nodesY) {
-					//Pos
-					xs[0] = lX;
-					ys[0] = lY;
 					//Negative X
 					xs[1] = lX - step;
 					ys[1] = lY;
+					xs[4] = x - 1;
+					ys[4] = y;
 					//Positive Y
 					xs[2] = lX;
 					ys[2] = lY + step;
+					xs[5] = x;
+					ys[5] = y + 1;
 					addTriangle(l, f, xs, ys);
 				}
 			}
 			if (x < nodesX) {
 				//Neighbours to the -y
 				if (y > 0) {
-					//Pos
-					xs[0] = lX;
-					ys[0] = lY;
 					//Positive X
 					xs[1] = lX + step;
 					ys[1] = lY;
+					xs[4] = x + 1;
+					ys[4] = y;
 					//Negative Y
 					xs[2] = lX;
 					ys[2] = lY - step;
+					xs[5] = x;
+					ys[5] = y - 1;
 					addTriangle(l, f, xs, ys);
 				}
 				//Neighbours to the +y
 				if (y < nodesY) {
-					//Pos
-					xs[0] = lX;
-					ys[0] = lY;
 					//Positive Y
 					xs[1] = lX;
 					ys[1] = lY + step;
+					xs[4] = x;
+					ys[4] = y + 1;
 					//Positive X
 					xs[2] = lX + step;
 					ys[2] = lY;
+					xs[5] = x + 1;
+					ys[5] = y;
 					addTriangle(l, f, xs, ys);
 				}
 			}
@@ -354,84 +376,43 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 	if (lastLOD[face][gridX].size() <= static_cast<unsigned int>(gridY)) {
 		lastLOD[face][gridX].push_back(0);
 	}
-	std::vector<unsigned short> ind;
-	std::vector<glm::vec3> o_vert;
-	std::vector<glm::vec2> o_uv;
-	std::vector<glm::vec3> o_norm;
-	std::vector<glm::vec3> o_tan;
-	std::vector<glm::vec3> o_bitan;
-	//Calculate tangent + bitangent
-	//Index vertices
-	Model::indexVBO(vert_sea, uv_sea, norm_sea, ind, o_vert, o_uv, o_norm);
 	//Set mesh
-	if (ind.size() > 0) {
+	if (ind_sea.size() > 0) {
 		Mesh* m = new Mesh();
-		m->setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+		m->setMesh(ind_sea, vert_sea, uv, norm, std::vector<glm::vec3>(), std::vector<glm::vec3>());
 		m->useNormalTexture = false;
 		meshes.sea = m;
 		meshes.sea->setDiffuse(OpenGLSetup::loadImage("assets/testing/water.png"));
 	} else {
 		meshes.sea = NULL;
 	}
-	ind.clear();
-	vert_sea.clear();
-	uv_sea.clear();
-	norm_sea.clear();
-	tan.clear();
-	bitan.clear();
-	o_vert.clear();
-	o_uv.clear();
-	o_norm.clear();
-	o_tan.clear();
-	o_bitan.clear();
-	//Calculate tangent + bitangent
-	//Index vertices
-	Model::indexVBO(vert_land, uv_land, norm_land, ind, o_vert, o_uv, o_norm);
 	//Set mesh
-	if (ind.size() > 0) {
+	if (ind_land.size() > 0) {
 		Mesh* m = new Mesh();
-		m->setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+		m->setMesh(ind_land, vert_land, uv, norm, std::vector<glm::vec3>(), std::vector<glm::vec3>());
 		m->useNormalTexture = false;
 		meshes.grass = m;
 		meshes.grass->setDiffuse(OpenGLSetup::loadImage("assets/testing/grass.png"));
 	} else {
 		meshes.grass = NULL;
 	}
-	ind.clear();
-	vert_land.clear();
-	uv_land.clear();
-	norm_land.clear();
-	tan.clear();
-	bitan.clear();
-	o_vert.clear();
-	o_uv.clear();
-	o_norm.clear();
-	o_tan.clear();
-	o_bitan.clear();
-	//Calculate tangent + bitangent
-	//Index vertices
-	Model::indexVBO(vert_rock, uv_rock, norm_rock, ind, o_vert, o_uv, o_norm);
 	//Set mesh
-	if (ind.size() > 0) {
+	if (ind_rock.size() > 0) {
 		Mesh* m = new Mesh();
-		m->setMesh(ind, o_vert, o_uv, o_norm, o_tan, o_bitan);
+		m->setMesh(ind_rock, vert_land, uv, norm, std::vector<glm::vec3>(), std::vector<glm::vec3>());
 		m->useNormalTexture = false;
 		meshes.rock = m;
 		meshes.rock->setDiffuse(OpenGLSetup::loadImage("assets/testing/rock.png"));
 	} else {
 		meshes.rock = NULL;
 	}
-	ind.clear();
-	vert_rock.clear();
-	uv_rock.clear();
-	norm_rock.clear();
-	tan.clear();
-	bitan.clear();
-	o_vert.clear();
-	o_uv.clear();
-	o_norm.clear();
-	o_tan.clear();
-	o_bitan.clear();
+	ind_sea.clear();
+	ind_land.clear();
+	ind_rock.clear();
+	vert_land.clear();
+	vert_sea.clear();
+	uv.clear();
+	norm.clear();
 	LODS[l][face][gridX][gridY] = meshes;
 }
 
@@ -548,7 +529,7 @@ void Planet::setNode(float value, unsigned int face, unsigned int x, unsigned in
 	}
 }
 
-float Planet::getNode(int face, int x, int y) {
+void Planet::moveInBounds(int & face, int & x, int & y) {
 	//Handle wrapping (mostly, don't expect large numbers to work)
 	if (face == FACE_POS_X) {
 		if (x < 0) {
@@ -657,8 +638,12 @@ float Planet::getNode(int face, int x, int y) {
 	}
 	if (x >= heightmap[face].size() || x < 0 || y >= heightmap[face][x].size() || y < 0) {
 		//Damn it go for another pass
-		return getNode(face, x, y);
+		moveInBounds(face, x, y);
 	}
+}
+
+float Planet::getNode(int face, int x, int y) {
+	moveInBounds(face, x, y);
 	return heightmap[face][x][y];
 }
 
@@ -681,7 +666,7 @@ glm::vec3 Planet::getVertex(int x, int y, int face, float height) {
 	return p;
 }
 
-void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
+void Planet::addTriangle(int l, int f, int (&xs)[6], int (&ys)[6]) {
 	bool addSea = false;
 	bool addLand = false;
 	bool addRock = false;
@@ -698,38 +683,30 @@ void Planet::addTriangle(int l, int f, int (&xs)[3], int (&ys)[3]) {
 	}
 	addRock = averageHeight / 3.0f > HEIGHT_ROCK;
 	//If any point is below sea level add all to sea (setting height to sea level)
+	//for (int i = 0; i < 3; i++) {
+	//	moveInBounds(f, xs[i], ys[i]);
+	//}
 	if (addSea) {
 		for (int i = 0; i < 3; i++) {
-			glm::vec3 v = getVertex(xs[i], ys[i], f, HEIGHT_SEA);
-			if (l != 0) {
-				v *= lowLodScale;
-			}
-			vert_sea.push_back(v);
-			uv_sea.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-			norm_sea.push_back(glm::normalize(v));
+			unsigned short pos = xs[i + 3] + (nodesInGrid + 1) * ys[i + 3];
+			ind_sea.push_back(pos);
 		}
 	}
 	//If any point is above sea level add to land
 	if (addLand) {
 		if (addRock) {
 			for (int i = 0; i < 3; i++) {
-				glm::vec3 v = getVertex(xs[i], ys[i], f);
-				if (l != 0) {
-					v *= lowLodScale;
+				for (int i = 0; i < 3; i++) {
+					unsigned short pos = xs[i + 3] + (nodesInGrid + 1) * ys[i + 3];
+					ind_rock.push_back(pos);
 				}
-				vert_rock.push_back(v);
-				uv_rock.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-				norm_rock.push_back(glm::normalize(v));
 			}
 		} else {
 			for (int i = 0; i < 3; i++) {
-				glm::vec3 v = getVertex(xs[i], ys[i], f);
-				if (l != 0) {
-					v *= lowLodScale;
+				for (int i = 0; i < 3; i++) {
+					unsigned short pos = xs[i + 3] + (nodesInGrid + 1) * ys[i + 3];
+					ind_land.push_back(pos);
 				}
-				vert_land.push_back(v);
-				uv_land.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(xs[i]) / (NUM_NODES), static_cast<float>(ys[i]) / (NUM_NODES)));
-				norm_land.push_back(glm::normalize(v));
 			}
 		}
 	}
