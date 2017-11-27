@@ -48,7 +48,7 @@ void Camera::initShadowMap() {
 	//Create framebuffer
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
 	glDrawBuffer(GL_NONE);
-	//glReadBuffer(GL_NONE);
+	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -112,12 +112,16 @@ void Camera::render() {
 	DirectionalLight* d = getScene()->getDirectionalLight();
 	//This needs changing for larger scenes
 	//Calculate directional light projection
-	float near_plane = 1.0f, far_plane = 100.0f;
-	float orthosize = 50.0f;
+	float near_plane = 1.0f, far_plane = 20.0f;
+	float orthosize = 5.0f;
 	glm::mat4 lightProjection = glm::ortho(-orthosize, orthosize, -orthosize, orthosize, near_plane, far_plane);
-	glm::mat4 lightView = glm::lookAt(d->direction * -50.0f,
+	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+	if (d->direction.x == 0.0 && d->direction.z == 0.0) {
+		up = glm::vec3(1.0f, 0.0f, 0.0f);
+	}
+	glm::mat4 lightView = glm::lookAt(d->direction * -10.0f,
 		glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3(0.0f, 1.0f, 0.0f));
+		up);
 	glm::mat4 LSM = lightProjection * lightView;
 	//Pass matrix to shader
 	glUseProgram(shadow.getProgram());
@@ -126,7 +130,7 @@ void Camera::render() {
 	glViewport(0, 0, shadowMapSize, shadowMapSize);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 	glClear(GL_DEPTH_BUFFER_BIT);
-	glCullFace(GL_FRONT);
+	glCullFace(GL_NONE);
 	//Draw shadows
 	for (Renderable* r : renderables) {
 		r->renderShadow(shadow.getProgram());
