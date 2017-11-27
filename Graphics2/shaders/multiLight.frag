@@ -75,13 +75,24 @@ float calcShadow(vec3 lightDir){
 	vec3 lPos3 = (lPos.xyz / lPos.w);
 	//Change range to [0,1]
 	lPos3 = lPos3 * 0.5 + 0.5;
-	float closestDepth = texture(shadow, lPos3.xy).r;
+	//float closestDepth = texture(shadow, lPos3.xy).r;
 	if(lPos3.z > 1.0){
         return 0.0;
 	}
 	//Compare depth (with small bias) to shadowmap
-	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005);
-	return lPos3.z - bias > closestDepth ? 1.0 : 0.0;
+	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.0005);
+	
+	float s = 0.0;
+	vec2 texelSize = 1.0 / textureSize(shadow, 0);
+	for(int x = -1; x <= 1; ++x) {
+		for(int y = -1; y <= 1; ++y) {
+			float pcfDepth = texture(shadow, lPos3.xy + vec2(x, y) * texelSize).r; 
+			s += lPos3.z - bias > pcfDepth ? 1.0 : 0.0;        
+		}    
+	}
+	s /= 9.0;
+	return s;
+	//return lPos3.z - bias > closestDepth ? 1.0 : 0.0;
 }
 
 void main(){
@@ -126,7 +137,6 @@ void calcDirectional(){
 	float spec = max(0.0, pow(max(dot(norm, halfDir), 0.0), shininess));
 	float shadow = calcShadow(lightDir);
 	col3 += (diff * diffuseColour + spec * specularColour) * dirLight.colour * (1.0 - shadow);
-	//col3 = diffuseColour * (1.0 - shadow);
 }
 
 void calcPointLight(){
