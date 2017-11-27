@@ -2,6 +2,8 @@
 #include "../renderer/Scene.h"
 #include "Player.h"
 #include "../terrain/Planet.h"
+#include <unordered_set>
+
 class Game {
 	friend void generateTerrain(Game* game);
 	friend void loadAssets(Game* game);
@@ -23,6 +25,6 @@ private:
 	Scene* lowLodScene;
 	SceneObject* transformedSpace;
 	bool forceVisualUpdate;
-	std::vector<Mesh*> highPoly;
+	std::unordered_set<Mesh*> highPoly;
 };
 

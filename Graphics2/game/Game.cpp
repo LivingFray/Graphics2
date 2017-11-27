@@ -104,7 +104,7 @@ void Game::update(double dt) {
 	//Handle movement
 	if (forceVisualUpdate || oldPos != worldPos) {
 		homeWorld->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);
-		/*
+		//*
 		for(Mesh* m: highPoly) {
 			if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
 				worldPos = oldPos;

@@ -1,6 +1,6 @@
 #pragma once
 /*
-Simplified Octree that is used for collisions, and doesn't store vertex information
+Octree used to calculate collisions
 */
 #include <vector>
 

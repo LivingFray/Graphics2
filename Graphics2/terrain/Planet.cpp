@@ -87,25 +87,34 @@ void Planet::generateTerrain(int octDepth) {
 			}
 		}
 	}
-	/*
+	//*
+	//Because for some reason this can take upwards of 10 mins to run in 1 thread, I'll just max out the CPU
 	std::cout << "Generating collision data" << std::endl;
 	for (int face = 0; face < 6; face++) {
 		//For each grid cell
 		for (int gridX = 0; gridX < numGrids; gridX++) {
 			for (int gridY = 0; gridY < numGrids; gridY++) {
-				PlanetMeshes m = LODS[0][face][gridX][gridY];
-				if (m.grass) {
-					m.grass->createOctree(octDepth);
+				PlanetMeshes* m = &LODS[0][face][gridX][gridY];
+				if (m->grass) {
+					std::thread* t = new std::thread([m, octDepth] { m->grass->createOctree(octDepth); });
+					//m.grass->createOctree(octDepth);
 				}
-				if (m.sea) {
-					m.sea->createOctree(octDepth);
+				if (m->sea) {
+					std::thread* t = new std::thread([m, octDepth] { m->sea->createOctree(octDepth); });
+					//m.sea->createOctree(octDepth);
 				}
-				if (m.rock) {
-					m.rock->createOctree(octDepth);
+				if (m->rock) {
+					std::thread* t = new std::thread([m, octDepth] { m->rock->createOctree(octDepth); });
+					//m.rock->createOctree(octDepth);
 				}
 			}
 		}
 	}
+	for (std::thread* t : threads) {
+		t->join();
+		delete t;
+	}
+	threads.clear();
 	//*/
 }
 
@@ -115,7 +124,7 @@ void Planet::generateTerrain(int octDepth) {
 
 //TODO Handle transformed planets
 
-void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::vector<Mesh*> &highPoly) {
+void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::unordered_set<Mesh*> &highPoly) {
 	//Starting at current grid move out in each direction and change visibility if need be
 	//
 	//
@@ -246,6 +255,17 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 					if (m.rock) {
 						m.rock->setParent(s);
 					}
+					if (lastLOD[f][x][y] == 0) {
+						if (m.grass) {
+							highPoly.erase(m.grass);
+						}
+						if (m.sea) {
+							highPoly.erase(m.sea);
+						}
+						if (m.rock) {
+							highPoly.erase(m.rock);
+						}
+					}
 				}
 				//Show new meshes
 				if (lod >= 0) {
@@ -263,6 +283,17 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 					}
 					if (m.rock) {
 						m.rock->setParent(s);
+					}
+					if (lod == 0) {
+						if (m.grass) {
+							highPoly.insert(m.grass);
+						}
+						if (m.sea) {
+							highPoly.insert(m.sea);
+						}
+						if (m.rock) {
+							highPoly.insert(m.rock);
+						}
 					}
 				}
 				//Update last LOD
