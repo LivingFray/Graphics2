@@ -126,7 +126,7 @@ void calcDirectional(){
 	float spec = max(0.0, pow(max(dot(norm, halfDir), 0.0), shininess));
 	float shadow = calcShadow(lightDir);
 	col3 += (diff * diffuseColour + spec * specularColour) * dirLight.colour * (1.0 - shadow);
-	col3 = diffuseColour * (1.0 - shadow);
+	//col3 = diffuseColour * (1.0 - shadow);
 }
 
 void calcPointLight(){

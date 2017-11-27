@@ -24,7 +24,7 @@
 #define FACE_NEG_Z 5
 
 
-#define TEX_REPEAT 16.0f
+#define TEX_REPEAT 64.0f
 
 Planet::Planet() {
 	lastPos = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -97,15 +97,12 @@ void Planet::generateTerrain(int octDepth) {
 				PlanetMeshes* m = &LODS[0][face][gridX][gridY];
 				if (m->grass) {
 					std::thread* t = new std::thread([m, octDepth] { m->grass->createOctree(octDepth); });
-					//m.grass->createOctree(octDepth);
 				}
 				if (m->sea) {
 					std::thread* t = new std::thread([m, octDepth] { m->sea->createOctree(octDepth); });
-					//m.sea->createOctree(octDepth);
 				}
 				if (m->rock) {
 					std::thread* t = new std::thread([m, octDepth] { m->rock->createOctree(octDepth); });
-					//m.rock->createOctree(octDepth);
 				}
 			}
 		}
@@ -526,6 +523,8 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 		m->useNormalTexture = false;
 		meshes.sea = m;
 		meshes.sea->setDiffuse(OpenGLSetup::loadImage("assets/testing/water.png"));
+		meshes.sea->setShininess(32.0f);
+		meshes.sea->setSpecular(OpenGLSetup::loadImage("assets/testing/white.png"));
 	} else {
 		meshes.sea = NULL;
 	}
