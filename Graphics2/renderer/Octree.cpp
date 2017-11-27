@@ -70,9 +70,9 @@ void Octree::divide(std::vector<unsigned short> &indices, std::vector<glm::vec3>
 	if (depth == 0) {
 		for (unsigned int i = 0; i < indices.size() / 3; i+=3) {
 			std::vector<glm::vec3> tri(3);
-			tri[0] = points[i + 0];
-			tri[0] = points[i + 1];
-			tri[0] = points[i + 2];
+			tri[0] = points[indices[i] + 0];
+			tri[1] = points[indices[i] + 1];
+			tri[2] = points[indices[i] + 2];
 			tris.push_back(tri);
 		}
 		return;

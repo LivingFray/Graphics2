@@ -102,7 +102,7 @@ void main(){
 	//Add ambient light
 	col3 = diffuseColour * ambient;
 	//Add emission
-	//col3 += texture(emissionMap, texCoords).rgb;
+	col3 += texture(emissionMap, texCoords).rgb;
 	//Add directional light
 	if(numDirLights!=0){
 		calcDirectional();
@@ -126,7 +126,7 @@ void calcDirectional(){
 	float spec = max(0.0, pow(max(dot(norm, halfDir), 0.0), shininess));
 	float shadow = calcShadow(lightDir);
 	col3 += (diff * diffuseColour + spec * specularColour) * dirLight.colour * (1.0 - shadow);
-	//col3 = diffuseColour * (1.0 - shadow);
+	col3 = diffuseColour * (1.0 - shadow);
 }
 
 void calcPointLight(){
