@@ -68,6 +68,13 @@ void Octree::divide(std::vector<unsigned short> &indices, std::vector<glm::vec3>
 
 	//If depth = 0: Leaf node
 	if (depth == 0) {
+		for (unsigned int i = 0; i < indices.size() / 3; i+=3) {
+			std::vector<glm::vec3> tri(3);
+			tri[0] = points[i + 0];
+			tri[0] = points[i + 1];
+			tri[0] = points[i + 2];
+			tris.push_back(tri);
+		}
 		return;
 	}
 	//Decrease depth
@@ -129,7 +136,7 @@ void Octree::divide(std::vector<unsigned short> &indices, std::vector<glm::vec3>
 //	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 }
 
-bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans) {
+bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, glm::mat4 &invOtherTrans) {
 	/* TRANSLATED PSEUDOCODE FROM LECTURES (so don't blame me if its wrong)
 	If NOT overlap(this, other) return false
 	else if leaf(this)
@@ -150,17 +157,30 @@ bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans) {
 	}
 	if (children.size() == 0) {
 		if (other->children.size() == 0) {
-			return true;
+			glm::mat4 combTrans = trans * invOtherTrans;
+			//For simplicity compare this objects octree with the other objects triangle
+			for (std::vector<glm::vec3> tri : other->tris) {
+				//Convert triangle to correct coordinate system
+				std::vector<glm::vec3> transTri(3);
+				transTri[0] = glm::vec3(combTrans * glm::vec4(tri[0], 1.0f));
+				transTri[1] = glm::vec3(combTrans * glm::vec4(tri[1], 1.0f));
+				transTri[2] = glm::vec3(combTrans * glm::vec4(tri[2], 1.0f));
+				//Check for collision
+				if (containsTriangle(transTri, minX, maxX, minY, maxY, minZ, maxZ)) {
+					return true;
+				}
+			}
+			return false;
 		} else {
 			for (Octree* o : other->children) {
-				if (this->collides(o, trans, otherTrans)) {
+				if (this->collides(o, trans, otherTrans, invOtherTrans)) {
 					return true;
 				}
 			}
 		}
 	} else {
 		for (Octree* o : this->children) {
-			if (o->collides(other, trans, otherTrans)) {
+			if (o->collides(other, trans, otherTrans, invOtherTrans)) {
 				return true;
 			}
 		}

@@ -155,9 +155,9 @@ void Mesh::createOctree(int depth) {
 	collisionTree->create(indices, vertices, depth);
 }
 
-bool Mesh::collides(Octree* other, glm::mat4 &otherTrans) {
+bool Mesh::collides(Octree* other, glm::mat4 &otherTrans, glm::mat4 &invTrans) {
 	if (!collisionTree) {
 		return false;
 	}
-	return collisionTree->collides(other, getGlobalMatrix(), otherTrans);
+	return collisionTree->collides(other, getGlobalMatrix(), otherTrans, invTrans);
 }

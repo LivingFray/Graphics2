@@ -126,8 +126,9 @@ void Model::createOctrees(int maxDepth) {
 }
 
 bool Model::collides(Octree* other, glm::mat4 &otherTrans) {
+	glm::mat4 inv = glm::inverse(otherTrans);
 	for (Mesh* m : meshes) {
-		if (m->collides(other, otherTrans)) {
+		if (m->collides(other, otherTrans, inv)) {
 			return true;
 		}
 	}

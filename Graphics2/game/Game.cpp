@@ -20,7 +20,7 @@ void loadAssets(Game* game) {
 	std::cout << "Loading models..." << std::endl;
 	game->player = new Player();
 	game->player->setGame(game);
-	game->player->getShip()->createOctrees(5);
+	game->player->getShip()->createOctrees(2);
 	game->worldPos = glm::vec3(38000.0f, 0.0f, 0.0f);
 
 	std::cout << "All models loaded" << std::endl;
