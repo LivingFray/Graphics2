@@ -41,7 +41,7 @@ public:
 	// Whether the camera clears the scene before drawing
 	bool clearOnDraw;
 	// Renders the scene from the perspective of this camera
-	void render();
+	void render(GLuint target = 0);
 	// Initialises the shadow map
 	void initShadowMap();
 private:
@@ -56,6 +56,6 @@ private:
 	GLuint depthMap;
 	Shader shadow;
 	//TODO: In-game adjusting
-	unsigned int shadowMapSize = 1024;
+	unsigned int shadowMapSize = 2048;
 	GLuint fbo;
 };

@@ -69,7 +69,7 @@ Cube::~Cube() {
 	glDeleteVertexArrays(1, &vertexArray);
 }
 
-void Cube::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
+void Cube::render(Camera* cam, GLuint depthMap, glm::mat4& LSM) {
 	//Use correct shaders
 	glUseProgram(shader.getProgram());
 	//Enable the VAO

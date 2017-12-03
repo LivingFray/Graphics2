@@ -71,7 +71,7 @@ void Mesh::setMesh(vector<unsigned short> indices, vector<glm::vec3> vertices, v
 	}
 }
 
-void Mesh::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
+void Mesh::render(Camera* cam, GLuint depthMap, glm::mat4& LSM) {
 	//Use correct shaders
 	glUseProgram(program);
 	//Enable the VAO

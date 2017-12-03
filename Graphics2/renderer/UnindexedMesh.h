@@ -8,7 +8,7 @@ public:
 	// Sets the mesh
 	void setMesh(vector<glm::vec3> vertices, vector<glm::vec2> uvs, vector<glm::vec3> normals, vector<glm::vec3> tangents, vector<glm::vec3> bitangents);
 	// Draws the mesh
-	void render(Camera* cam, GLuint depthMap, glm::mat4 LSM);
+	void render(Camera* cam, GLuint depthMap, glm::mat4& LSM);
 	// Draws the mesh's shadow
 	void renderShadow(GLuint p);
 	// Sets the shininess of the mesh

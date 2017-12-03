@@ -98,11 +98,12 @@ glm::mat4 Camera::getView() {
 	return glm::affineInverse(getGlobalMatrix());
 }
 
-void Camera::render() {
+void Camera::render(GLuint target) {
 	if (!getScene()) {
 		std::cerr << "No scene associated with camera" << std::endl;
 		return;
 	}
+	glBindFramebuffer(GL_FRAMEBUFFER, target);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	//TODO: space partitioning and culling and such
@@ -112,14 +113,14 @@ void Camera::render() {
 	DirectionalLight* d = getScene()->getDirectionalLight();
 	//This needs changing for larger scenes
 	//Calculate directional light projection
-	float near_plane = 1.0f, far_plane = 20.0f;
+	float near_plane = 1.0f, far_plane = 200.0f;
 	float orthosize = 5.0f;
 	glm::mat4 lightProjection = glm::ortho(-orthosize, orthosize, -orthosize, orthosize, near_plane, far_plane);
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	if (d->direction.x == 0.0 && d->direction.z == 0.0) {
 		up = glm::vec3(1.0f, 0.0f, 0.0f);
 	}
-	glm::mat4 lightView = glm::lookAt(d->direction * -10.0f,
+	glm::mat4 lightView = glm::lookAt(d->direction * -100.0f,
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		up);
 	glm::mat4 LSM = lightProjection * lightView;
@@ -127,17 +128,17 @@ void Camera::render() {
 	glUseProgram(shadow.getProgram());
 	glUniformMatrix4fv(glGetUniformLocation(shadow.getProgram(), "lightSpaceMatrix"), 1, false, &LSM[0][0]);
 	//Enable correct buffer
-	glViewport(0, 0, shadowMapSize, shadowMapSize);
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+	glViewport(0, 0, shadowMapSize, shadowMapSize);
 	glClear(GL_DEPTH_BUFFER_BIT);
 	glCullFace(GL_NONE);
 	//Draw shadows
 	for (Renderable* r : renderables) {
 		r->renderShadow(shadow.getProgram());
 	}
+	glBindFramebuffer(GL_FRAMEBUFFER, target);
 	glCullFace(GL_BACK);
 	//Reset buffer
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	//Fix viewport
 	int w, h;
 	glfwGetWindowSize(OpenGLSetup::window, &w, &h);

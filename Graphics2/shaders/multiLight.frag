@@ -80,7 +80,7 @@ float calcShadow(vec3 lightDir){
         return 0.0;
 	}
 	//Compare depth (with small bias) to shadowmap
-	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.0005);
+	float bias = max(0.05 * (1.0 - dot(norm, lightDir)), 0.005);
 	
 	float s = 0.0;
 	vec2 texelSize = 1.0 / textureSize(shadow, 0);

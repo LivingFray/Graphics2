@@ -27,7 +27,7 @@ private:
 	Camera* orbital;
 	float cockpitYaw = 0.0f;
 	float cockpitPitch = 0.0f;
-	float shipSpeed = 1000.0f;
+	float shipSpeed = 10.0f;
 	bool boostSpeed = false;
 	CurrentCamera activeCam;
 };

@@ -126,6 +126,7 @@
     <ClCompile Include="game\Player.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="renderer\Octree.cpp" />
+    <ClCompile Include="renderer\Portal.cpp" />
     <ClCompile Include="renderer\UnindexedMesh.cpp" />
     <ClCompile Include="terrain\Planet.cpp" />
     <ClCompile Include="renderer\Camera.cpp" />
@@ -146,6 +147,7 @@
     <ClInclude Include="game\Game.h" />
     <ClInclude Include="game\Player.h" />
     <ClInclude Include="renderer\Octree.h" />
+    <ClInclude Include="renderer\Portal.h" />
     <ClInclude Include="renderer\UnindexedMesh.h" />
     <ClInclude Include="terrain\Planet.h" />
     <ClInclude Include="renderer\Camera.h" />

@@ -135,6 +135,12 @@ bool Model::collides(Octree* other, glm::mat4 &otherTrans) {
 	return false;
 }
 
+void Model::renderShadow(GLuint p) {
+	for (Mesh* m : meshes) {
+		m->renderShadow(p);
+	}
+}
+
 void Model::indexVBO(
 	std::vector<glm::vec3> & in_vertices,
 	std::vector<glm::vec2> & in_uvs,

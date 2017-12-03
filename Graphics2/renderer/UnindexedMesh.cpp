@@ -66,7 +66,7 @@ void UnindexedMesh::setMesh(vector<glm::vec3> vertices, vector<glm::vec2> uvs, v
 	}
 }
 
-void UnindexedMesh::render(Camera* cam, GLuint depthMap, glm::mat4 LSM) {
+void UnindexedMesh::render(Camera* cam, GLuint depthMap, glm::mat4& LSM) {
 	//Use correct shaders
 	glUseProgram(program);
 	//Enable the VAO

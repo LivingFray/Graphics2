@@ -2,6 +2,7 @@
 #include "../renderer/Scene.h"
 #include "Player.h"
 #include "../terrain/Planet.h"
+#include "../renderer/Portal.h"
 #include <unordered_set>
 
 class Game {
@@ -11,6 +12,7 @@ public:
 	Game();
 	~Game();
 	Scene* scene;
+	Scene* secondScene;
 	Player* player;
 	void keyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void update(double dt);
@@ -18,13 +20,15 @@ public:
 	glm::vec3 worldPos;
 	const float lowLodScale = 1.0f/1000.0f;
 private:
-	DirectionalLight* sunLight;
-	DirectionalLight* lowSunLight;
 	Planet* homeWorld;
+	Planet* otherWorld;
+	Portal* portal;
 	Camera* lowLodCam;
 	Scene* lowLodScene;
+	Scene* secondLowLodScene;
 	SceneObject* transformedSpace;
 	bool forceVisualUpdate;
 	std::unordered_set<Mesh*> highPoly;
+	float rot = 0;
 };
 

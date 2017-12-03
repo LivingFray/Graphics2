@@ -24,6 +24,8 @@ public:
 	void createOctrees(int maxDepth);
 	// Checks if the octree collides with anything
 	bool collides(Octree* other, glm::mat4 &otherTrans);
+	// Renders shadows of a model
+	void renderShadow(GLuint p);
 	//"Borrowed" from opengl-tutorials
 	static void indexVBO(
 		std::vector<glm::vec3> & in_vertices,
