@@ -4,17 +4,6 @@
 
 #include <iostream>
 
-//Generator settings
-#define NODES_EXP 7
-#define NUM_NODES ((1 << NODES_EXP) + 1)
-#define MIN_Y (-0.15f)
-#define MAX_Y 0.15f
-#define ROUGHNESS 1.0f
-
-//Biome settings
-#define HEIGHT_SEA 0.05f
-#define HEIGHT_ROCK 0.10f
-
 //Enums for the face of the planet
 #define FACE_POS_X 0
 #define FACE_NEG_X 1
@@ -41,10 +30,10 @@ void Planet::generateTerrain(int octDepth) {
 	for (unsigned int f = 0; f < 6; f++) {
 		//For each face
 		std::vector<std::vector<float>> face;
-		for (unsigned int x = 0; x < NUM_NODES; x++) {
+		for (unsigned int x = 0; x < numNodes; x++) {
 			//For each x value
 			std::vector<float> xVec;
-			for (unsigned int y = 0; y < NUM_NODES; y++) {
+			for (unsigned int y = 0; y < numNodes; y++) {
 				xVec.push_back(0.0f);
 			}
 			face.push_back(xVec);
@@ -68,7 +57,7 @@ void Planet::generateTerrain(int octDepth) {
 	Max verts per grid = 16k to be safe
 	Define grid size to be constant (MAX_VERTS by MAX_VERTS)
 	*/
-	numGrids = static_cast<int>(ceil(static_cast<float>(NUM_NODES) / MAX_VERTS));
+	numGrids = static_cast<int>(ceil(static_cast<float>(numNodes) / MAX_VERTS));
 	for (int l = 0; l < NUM_LOD; l++) {
 		std::cout << "Converting heightmap to meshes (LOD" << l << ")" << std::endl;
 		//For each face
@@ -76,11 +65,11 @@ void Planet::generateTerrain(int octDepth) {
 			//For each grid cell
 			for (int gridX = 0; gridX < numGrids; gridX++) {
 				int minX = MAX_VERTS * gridX;
-				int maxX = gridX == numGrids - 1 ? NUM_NODES - 1 : minX + MAX_VERTS;
+				int maxX = gridX == numGrids - 1 ? numNodes - 1 : minX + MAX_VERTS;
 				for (int gridY = 0; gridY < numGrids; gridY++) {
 					//Calculate bounds of the grid
 					int minY = MAX_VERTS * gridY;
-					int maxY = gridY == numGrids - 1 ? NUM_NODES - 1 : minY + MAX_VERTS;
+					int maxY = gridY == numGrids - 1 ? numNodes - 1 : minY + MAX_VERTS;
 					generateGrid(l, face, minX, minY, maxX, maxY);
 					makeMeshes(l, face, gridX, gridY);
 				}
@@ -208,20 +197,20 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 			int dX = MAX_VERTS;
 			int dY = MAX_VERTS;
 			if (x == numGrids - 1) {
-				dX = NUM_NODES - x * MAX_VERTS;
+				dX = numNodes - x * MAX_VERTS;
 			}
 			if (y == numGrids - 1) {
-				dY = NUM_NODES - y * MAX_VERTS;
+				dY = numNodes - y * MAX_VERTS;
 			}
 			int cX = x * MAX_VERTS + dX / 2;
 			int cY = y * MAX_VERTS + dY / 2;
 			float distSqr;
-			glm::vec3 centre = getVertex(cX, cY, f, HEIGHT_SEA);
+			glm::vec3 centre = getVertex(cX, cY, f, heightSea);
 			glm::vec3 diff = centre - pos;
 			distSqr = glm::dot(diff, diff);
 			for (int x2 = -1; x < 2; x+=2) {
 				for (int y2 = -1; y < 2; y+=2) {
-					glm::vec3 point = getVertex(x * MAX_VERTS + dX * x2, y * MAX_VERTS + dY * y2, f, HEIGHT_SEA);
+					glm::vec3 point = getVertex(x * MAX_VERTS + dX * x2, y * MAX_VERTS + dY * y2, f, heightSea);
 					diff = point - pos;
 					float dist = glm::dot(diff, diff);
 					if (dist < distSqr) {
@@ -324,28 +313,28 @@ void Planet::setLODS(float lods[NUM_LOD]) {
 }
 
 void Planet::diamondSquare() {
-	std::uniform_real_distribution<float> uni(MIN_Y, MAX_Y);
+	std::uniform_real_distribution<float> uni(minY, maxY);
 	std::default_random_engine rng(seed);
 	std::cout << "Creating corner nodes" << std::endl;
 	//Create corners
 	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, 0, 0);
-	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, 0, NUM_NODES - 1);
-	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, NUM_NODES - 1, 0);
-	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, NUM_NODES - 1, NUM_NODES - 1);
+	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, 0, numNodes - 1);
+	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, numNodes - 1, 0);
+	setNode(static_cast<float>(uni(rng)), FACE_NEG_Z, numNodes - 1, numNodes - 1);
 	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, 0, 0);
-	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, 0, NUM_NODES - 1);
-	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, NUM_NODES - 1, 0);
-	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, NUM_NODES - 1, NUM_NODES - 1);
+	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, 0, numNodes - 1);
+	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, numNodes - 1, 0);
+	setNode(static_cast<float>(uni(rng)), FACE_POS_Z, numNodes - 1, numNodes - 1);
 	std::cout << "Applying diamond square algorithm" << std::endl;
 	//Iteratively apply DSA
-	int size = NUM_NODES - 1;
-	float rand_var = (MAX_Y - MIN_Y) / 2;
+	int size = numNodes - 1;
+	float rand_var = (maxY - minY) / 2;
 	while (size > 1) {
 		std::uniform_real_distribution<float> u(-rand_var, rand_var);
 		//Diamond stage
 		for (int f = 0; f < 6; f++) {
-			for (int x = 0; x < (NUM_NODES - 1); x += size) {
-				for (int y = 0; y < (NUM_NODES - 1); y += size) {
+			for (int x = 0; x < (numNodes - 1); x += size) {
+				for (int y = 0; y < (numNodes - 1); y += size) {
 					//Get height of surrounding nodes
 					float p1, p2, p3, p4;
 					p1 = getNode(f, x, y);
@@ -359,7 +348,7 @@ void Planet::diamondSquare() {
 		//Square stages
 		for (int f = 0; f < 6; f++) {
 			//(x + y - 1) ÷ y
-			int s = (NUM_NODES - 1 + size / 2) / (size / 2);
+			int s = (numNodes - 1 + size / 2) / (size / 2);
 			for (int x = 0; x < s; x++) {
 				for (int z = 0; z < s; z++) {
 					if (x % 2 == z % 2) {
@@ -378,7 +367,7 @@ void Planet::diamondSquare() {
 			}
 		}
 		//Decrease size
-		rand_var *= static_cast<float>(pow(2, -ROUGHNESS));
+		rand_var *= static_cast<float>(pow(2, -roughness));
 		size = size / 2;
 	}
 }
@@ -386,7 +375,7 @@ void Planet::diamondSquare() {
 inline void Planet::createTransformations() {
 	//Transformations to apply to each face
 	//Centre planet on 0,0,0 (model space)
-	float halfNodes = static_cast<float>(NUM_NODES - 1) / 2.0f;
+	float halfNodes = static_cast<float>(numNodes - 1) / 2.0f;
 	glm::mat4 pos = glm::translate(glm::mat4(1), glm::vec3(-halfNodes, halfNodes, -halfNodes));
 
 	faceTrans[FACE_POS_X] = glm::rotate(glm::mat4(1), -glm::half_pi<float>(), glm::vec3(0.0f, 0.0f, 1.0f)) * glm::rotate(glm::mat4(1), glm::pi<float>(), glm::vec3(0.0f, 1.0f, 0.0f)) * pos;
@@ -408,10 +397,10 @@ inline void Planet::generateGrid(int l, int f, int minX, int minY, int maxX, int
 		int lY = y * step + minY;
 		for (int x = 0; x <= nodesX; x++) {
 			int lX = x * step + minX;
-			vert_sea.push_back(getVertex(lX, lY, f, HEIGHT_SEA) * scale);
+			vert_sea.push_back(getVertex(lX, lY, f, heightSea) * scale);
 			glm::vec3 v = getVertex(lX, lY, f);
 			vert_land.push_back(v * scale);
-			uv.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(lX) / (NUM_NODES), static_cast<float>(lY) / (NUM_NODES)));
+			uv.push_back(TEX_REPEAT * glm::vec2(static_cast<float>(lX) / (numNodes), static_cast<float>(lY) / (numNodes)));
 			norm.push_back(glm::normalize(v));
 		}
 	}
@@ -522,9 +511,9 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 		m->setMesh(ind_sea, vert_sea, uv, norm, std::vector<glm::vec3>(), std::vector<glm::vec3>());
 		m->useNormalTexture = false;
 		meshes.sea = m;
-		meshes.sea->setDiffuse(OpenGLSetup::loadImage("assets/testing/water.png"));
+		meshes.sea->setDiffuse(seaTex);
 		meshes.sea->setShininess(32.0f);
-		meshes.sea->setSpecular(OpenGLSetup::loadImage("assets/testing/white.png"));
+		meshes.sea->setSpecular(seaSpec);
 	} else {
 		meshes.sea = NULL;
 	}
@@ -534,7 +523,9 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 		m->setMesh(ind_land, vert_land, uv, norm, std::vector<glm::vec3>(), std::vector<glm::vec3>());
 		m->useNormalTexture = false;
 		meshes.grass = m;
-		meshes.grass->setDiffuse(OpenGLSetup::loadImage("assets/testing/grass.png"));
+		meshes.grass->setDiffuse(landTex);
+		meshes.grass->setShininess(32.0f);
+		meshes.grass->setSpecular(landSpec);
 	} else {
 		meshes.grass = NULL;
 	}
@@ -544,7 +535,9 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 		m->setMesh(ind_rock, vert_land, uv, norm, std::vector<glm::vec3>(), std::vector<glm::vec3>());
 		m->useNormalTexture = false;
 		meshes.rock = m;
-		meshes.rock->setDiffuse(OpenGLSetup::loadImage("assets/testing/rock.png"));
+		meshes.rock->setDiffuse(rockTex);
+		meshes.rock->setShininess(32.0f);
+		meshes.rock->setSpecular(rockSpec);
 	} else {
 		meshes.rock = NULL;
 	}
@@ -564,28 +557,28 @@ void Planet::setNode(float value, unsigned int face, unsigned int x, unsigned in
 	if (face == FACE_POS_X) {
 		//Left edge
 		if (x == 0) {
-			heightmap[FACE_POS_Z][y][NUM_NODES - 1] = value;
+			heightmap[FACE_POS_Z][y][numNodes - 1] = value;
 		}
 		//Right edge
-		if (x == NUM_NODES - 1) {
+		if (x == numNodes - 1) {
 			heightmap[FACE_NEG_Z][y][0] = value;
 		}
 		//Bottom edge
 		if (y == 0) {
-			heightmap[FACE_NEG_Y][NUM_NODES - 1 - x][NUM_NODES - 1] = value;
+			heightmap[FACE_NEG_Y][numNodes - 1 - x][numNodes - 1] = value;
 		}
 		//Top edge
-		if (y == NUM_NODES - 1) {
-			heightmap[FACE_POS_Y][x][NUM_NODES - 1] = value;
+		if (y == numNodes - 1) {
+			heightmap[FACE_POS_Y][x][numNodes - 1] = value;
 		}
 	}
 	if (face == FACE_NEG_X) {
 		//Left edge
 		if (x == 0) {
-			heightmap[FACE_NEG_Z][y][NUM_NODES - 1] = value;
+			heightmap[FACE_NEG_Z][y][numNodes - 1] = value;
 		}
 		//Right edge
-		if (x == NUM_NODES - 1) {
+		if (x == numNodes - 1) {
 			heightmap[FACE_POS_Z][y][0] = value;
 		}
 		//Bottom edge
@@ -593,26 +586,26 @@ void Planet::setNode(float value, unsigned int face, unsigned int x, unsigned in
 			heightmap[FACE_NEG_Y][x][0] = value;
 		}
 		//Top edge
-		if (y == NUM_NODES - 1) {
-			heightmap[FACE_POS_Y][NUM_NODES - 1 - x][0] = value;
+		if (y == numNodes - 1) {
+			heightmap[FACE_POS_Y][numNodes - 1 - x][0] = value;
 		}
 	}
 	if (face == FACE_POS_Y) {
 		//Left edge
 		if (x == 0) {
-			heightmap[FACE_NEG_X][NUM_NODES - 1][NUM_NODES - 1 - y] = value;
+			heightmap[FACE_NEG_X][numNodes - 1][numNodes - 1 - y] = value;
 		}
 		//Right edge
-		if (x == NUM_NODES - 1) {
-			heightmap[FACE_POS_X][NUM_NODES - 1][y] = value;
+		if (x == numNodes - 1) {
+			heightmap[FACE_POS_X][numNodes - 1][y] = value;
 		}
 		//Bottom edge
 		if (y == 0) {
-			heightmap[FACE_NEG_Z][NUM_NODES - 1][x] = value;
+			heightmap[FACE_NEG_Z][numNodes - 1][x] = value;
 		}
 		//Top edge
-		if (y == NUM_NODES - 1) {
-			heightmap[FACE_POS_Z][NUM_NODES - 1][NUM_NODES - 1 - x] = value;
+		if (y == numNodes - 1) {
+			heightmap[FACE_POS_Z][numNodes - 1][numNodes - 1 - x] = value;
 		}
 	}
 	if (face == FACE_NEG_Y) {
@@ -621,52 +614,52 @@ void Planet::setNode(float value, unsigned int face, unsigned int x, unsigned in
 			heightmap[FACE_NEG_X][0][y] = value;
 		}
 		//Right edge
-		if (x == NUM_NODES - 1) {
-			heightmap[FACE_POS_X][0][NUM_NODES - 1 - y] = value;
+		if (x == numNodes - 1) {
+			heightmap[FACE_POS_X][0][numNodes - 1 - y] = value;
 		}
 		//Bottom edge
 		if (y == 0) {
 			heightmap[FACE_POS_Z][0][x] = value;
 		}
 		//Top edge
-		if (y == NUM_NODES - 1) {
+		if (y == numNodes - 1) {
 			heightmap[FACE_NEG_Z][0][x] = value;
 		}
 	}
 	if (face == FACE_POS_Z) {
 		//Left edge
 		if (x == 0) {
-			heightmap[FACE_NEG_X][y][NUM_NODES - 1] = value;
+			heightmap[FACE_NEG_X][y][numNodes - 1] = value;
 		}
 		//Right edge
-		if (x == NUM_NODES - 1) {
+		if (x == numNodes - 1) {
 			heightmap[FACE_POS_X][y][0] = value;
 		}
 		//Bottom edge
 		if (y == 0) {
-			heightmap[FACE_NEG_Y][NUM_NODES - 1][x] = value;
+			heightmap[FACE_NEG_Y][numNodes - 1][x] = value;
 		}
 		//Top edge
-		if (y == NUM_NODES - 1) {
+		if (y == numNodes - 1) {
 			heightmap[FACE_POS_Y][0][x] = value;
 		}
 	}
 	if (face == FACE_NEG_Z) {
 		//Left edge
 		if (x == 0) {
-			heightmap[FACE_POS_X][y][NUM_NODES - 1] = value;
+			heightmap[FACE_POS_X][y][numNodes - 1] = value;
 		}
 		//Right edge
-		if (x == NUM_NODES - 1) {
+		if (x == numNodes - 1) {
 			heightmap[FACE_NEG_X][y][0] = value;
 		}
 		//Bottom edge
 		if (y == 0) {
-			heightmap[FACE_NEG_Y][0][NUM_NODES - 1 - x] = value;
+			heightmap[FACE_NEG_Y][0][numNodes - 1 - x] = value;
 		}
 		//Top edge
-		if (y == NUM_NODES - 1) {
-			heightmap[FACE_POS_Y][NUM_NODES - 1][NUM_NODES - 1 - x] = value;
+		if (y == numNodes - 1) {
+			heightmap[FACE_POS_Y][numNodes - 1][numNodes - 1 - x] = value;
 		}
 	}
 }
@@ -676,57 +669,57 @@ void Planet::moveInBounds(int & face, int & x, int & y) {
 	if (face == FACE_POS_X) {
 		if (x < 0) {
 			face = FACE_POS_Z;
-			x += NUM_NODES - 1;
-		} else if (x > NUM_NODES - 1) {
+			x += numNodes - 1;
+		} else if (x > numNodes - 1) {
 			face = FACE_NEG_Z;
-			x -= NUM_NODES - 1;
+			x -= numNodes - 1;
 		} else if (y < 0) {
 			face = FACE_NEG_Y;
-			int tmp = NUM_NODES - 1 + y;
-			y = NUM_NODES - 1 - x;
+			int tmp = numNodes - 1 + y;
+			y = numNodes - 1 - x;
 			x = tmp;
-		} else if (y > NUM_NODES - 1) {
+		} else if (y > numNodes - 1) {
 			face = FACE_POS_Y;
 			int tmp = x;
-			x = NUM_NODES - 1 - (y - (NUM_NODES - 1));
+			x = numNodes - 1 - (y - (numNodes - 1));
 			y = tmp;
 		}
 	} else if (face == FACE_NEG_X) {
 		if (x < 0) {
 			face = FACE_NEG_Z;
-			x += NUM_NODES - 1;
-		} else if (x > NUM_NODES - 1) {
+			x += numNodes - 1;
+		} else if (x > numNodes - 1) {
 			face = FACE_POS_Z;
-			x -= NUM_NODES - 1;
+			x -= numNodes - 1;
 		} else if (y < 0) {
 			face = FACE_NEG_Y;
 			int tmp = -y;
 			y = x;
 			x = tmp;
-		} else if (y > NUM_NODES - 1) {
+		} else if (y > numNodes - 1) {
 			face = FACE_POS_Y;
-			int tmp = (NUM_NODES - 1) - x;
-			x = y - (NUM_NODES - 1);
+			int tmp = (numNodes - 1) - x;
+			x = y - (numNodes - 1);
 			y = tmp;
 		}
 	} else if (face == FACE_POS_Y) {
 		if (x < 0) {
 			face = FACE_NEG_X;
-			int tmp = (NUM_NODES - 1) + x;
-			x = (NUM_NODES - 1) - y;
+			int tmp = (numNodes - 1) + x;
+			x = (numNodes - 1) - y;
 			y = tmp;
-		} else if (x > NUM_NODES - 1) {
+		} else if (x > numNodes - 1) {
 			face = FACE_POS_X;
-			int tmp = NUM_NODES - 1 - (x - (NUM_NODES - 1));
+			int tmp = numNodes - 1 - (x - (numNodes - 1));
 			x = y;
 			y = tmp;
 		} else if (y < 0) {
 			face = FACE_POS_Z;
-			y += NUM_NODES - 1;
-		} else if (y > NUM_NODES - 1) {
+			y += numNodes - 1;
+		} else if (y > numNodes - 1) {
 			face = FACE_NEG_Z;
-			x = NUM_NODES - 1 - x;
-			y = NUM_NODES - 1 - (y - (NUM_NODES - 1));
+			x = numNodes - 1 - x;
+			y = numNodes - 1 - (y - (numNodes - 1));
 		}
 	} else if (face == FACE_NEG_Y) {
 		if (x < 0) {
@@ -734,48 +727,48 @@ void Planet::moveInBounds(int & face, int & x, int & y) {
 			int tmp = -x;
 			x = y;
 			y = tmp;
-		} else if (x > NUM_NODES - 1) {
+		} else if (x > numNodes - 1) {
 			face = FACE_POS_X;
-			int tmp = x - (NUM_NODES - 1);
-			x = NUM_NODES - 1 - y;
+			int tmp = x - (numNodes - 1);
+			x = numNodes - 1 - y;
 			y = tmp;
 		} else if (y < 0) {
 			face = FACE_NEG_Z;
-			x = NUM_NODES - 1 - x;
+			x = numNodes - 1 - x;
 			y = -y;
-		} else if (y > NUM_NODES - 1) {
+		} else if (y > numNodes - 1) {
 			face = FACE_NEG_Z;
-			y -= NUM_NODES - 1;
+			y -= numNodes - 1;
 		}
 	} else if (face == FACE_POS_Z) {
 		if (x < 0) {
 			face = FACE_NEG_X;
-			x += NUM_NODES - 1;
-		} else if (x > NUM_NODES - 1) {
+			x += numNodes - 1;
+		} else if (x > numNodes - 1) {
 			face = FACE_POS_X;
-			x -= NUM_NODES - 1;
+			x -= numNodes - 1;
 		} else if (y < 0) {
 			face = FACE_NEG_Y;
-			y = NUM_NODES - 1 + y;
-		} else if (y > NUM_NODES - 1) {
+			y = numNodes - 1 + y;
+		} else if (y > numNodes - 1) {
 			face = FACE_POS_Y;
-			y -= NUM_NODES - 1;
+			y -= numNodes - 1;
 		}
 	} else if (face == FACE_NEG_Z) {
 		if (x < 0) {
 			face = FACE_POS_X;
-			x += NUM_NODES - 1;
-		} else if (x > NUM_NODES - 1) {
+			x += numNodes - 1;
+		} else if (x > numNodes - 1) {
 			face = FACE_NEG_X;
-			x -= NUM_NODES - 1;
+			x -= numNodes - 1;
 		} else if (y < 0) {
 			face = FACE_NEG_Y;
-			x = NUM_NODES - 1 - x;
+			x = numNodes - 1 - x;
 			y = -y;
-		} else if (y > NUM_NODES - 1) {
+		} else if (y > numNodes - 1) {
 			face = FACE_POS_Y;
-			x = NUM_NODES - 1 - x;
-			y = NUM_NODES - 1 - (y - (NUM_NODES - 1));
+			x = numNodes - 1 - x;
+			y = numNodes - 1 - (y - (numNodes - 1));
 		}
 	}
 	if (x >= heightmap[face].size() || x < 0 || y >= heightmap[face][x].size() || y < 0) {
@@ -816,14 +809,14 @@ void Planet::addTriangle(int l, int f, int(&xs)[6], int(&ys)[6]) {
 	float averageHeight = 0;
 	for (int i = 0; i < 3; i++) {
 		float h = getNode(f, xs[i], ys[i]);
-		if (h < HEIGHT_SEA) {
+		if (h < heightSea) {
 			addSea = true;
 		} else {
 			addLand = true;
 		}
 		averageHeight += h;
 	}
-	addRock = averageHeight / 3.0f > HEIGHT_ROCK;
+	addRock = averageHeight / 3.0f > heightRock;
 	//If any point is below sea level add all to sea (setting height to sea level)
 	if (addSea) {
 		for (int i = 0; i < 3; i++) {

@@ -57,6 +57,10 @@ void generateTerrain(Game* game) {
 	game->homeWorld->lowLodScale = game->lowLodScale;
 	float lod[] = {1000.0f, 4000.0f, 8000.0f, 64000.0f };
 	game->homeWorld->setLODS(lod);
+	game->homeWorld->setLandTexture(OpenGLSetup::loadImage("assets/terrain/grass.png"));
+	game->homeWorld->setSeaTexture(OpenGLSetup::loadImage("assets/terrain/water.png"));
+	game->homeWorld->setSeaSpecular(OpenGLSetup::loadImage("assets/terrain/white.png"));
+	game->homeWorld->setRockTexture(OpenGLSetup::loadImage("assets/terrain/rock.png"));
 	game->homeWorld->generateTerrain(0);
 	std::cout << "Terrain generated" << std::endl;
 }
