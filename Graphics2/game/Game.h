@@ -29,6 +29,6 @@ private:
 	SceneObject* transformedSpace;
 	bool forceVisualUpdate;
 	std::unordered_set<Mesh*> highPoly;
-	float rot = 0;
+	bool inFirstScene = true;
 };
 
