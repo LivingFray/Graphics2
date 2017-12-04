@@ -101,60 +101,6 @@ void Planet::generateTerrain(int octDepth) {
 }
 
 void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::unordered_set<Mesh*> &highPoly) {
-	glm::vec3 unitPos = glm::normalize(pos);
-	float cubeScaling = 1.0f / glm::max(glm::max(abs(unitPos.x), abs(unitPos.y)), abs(unitPos.z));
-	glm::vec3 cubeMapping = cubeScaling * unitPos;
-	//Determine face position is on
-	int face;
-	if (cubeMapping.x < -1.0f + 1e-5f) {
-		face = FACE_NEG_X;
-	} else if (cubeMapping.x > 1.0f - 1e-5f) {
-		face = FACE_POS_X;
-	} else if (cubeMapping.y < -1.0f + 1e-5f) {
-		face = FACE_NEG_Y;
-	} else if (cubeMapping.y > 1.0f - 1e-5f) {
-		face = FACE_POS_Y;
-	} else if (cubeMapping.z < -1.0f + 1e-5f) {
-		face = FACE_NEG_Z;
-	} else if (cubeMapping.z > 1.0f - 1e-5f) {
-		face = FACE_POS_Z;
-	}
-	//Get axes needed to calculate grid position
-	float xTrans;
-	float yTrans;
-	switch (face) {
-	case FACE_NEG_X:
-		xTrans = cubeMapping.y;
-		yTrans = cubeMapping.z;
-		break;
-	case FACE_POS_X:
-		xTrans = cubeMapping.y;
-		yTrans = -cubeMapping.z;
-		break;
-	case FACE_NEG_Y:
-		xTrans = cubeMapping.z;
-		yTrans = cubeMapping.x;
-		break;
-	case FACE_POS_Y:
-		xTrans = -cubeMapping.z;
-		yTrans = cubeMapping.x;
-		break;
-	case FACE_NEG_Z:
-		xTrans = cubeMapping.y;
-		yTrans = -cubeMapping.x;
-		break;
-	case FACE_POS_Z:
-		xTrans = cubeMapping.y;
-		yTrans = cubeMapping.x;
-		break;
-	default:
-		xTrans = 0.0f;
-		yTrans = 0.0f;
-	}
-	//Get grid position from pos
-	int gridX = glm::clamp(static_cast<int>(floor((numGrids - 1) * (xTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
-	int gridY = glm::clamp(static_cast<int>(floor((numGrids - 1) * (yTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
-	std::cout << gridX << ", " << gridY << " (" << face << ")\n";
 	for(int f = 0; f < 6; f++) {
 		for (int x = 0; x < numGrids; x++) {
 			for (int y = 0; y < numGrids; y++) {
