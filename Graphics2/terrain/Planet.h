@@ -24,8 +24,8 @@ public:
 	unsigned int seed;
 
 	void setNodeExp(int exp) { if (exp > 0) { nodesExp = exp; numNodes = (1 << exp) + 1; } }
-	void setMinY(float y) { minY = y; }
-	void setMaxY(float y) { maxY = y; }
+	void setMinY(float y) { minHeight = y; }
+	void setMaxY(float y) { maxHeight = y; }
 	void setRoughness(float r) { roughness = r; }
 	void setSeaHeight(float h) { heightSea = h; }
 	void setRockHeight(float h) { heightRock = h; }
@@ -92,8 +92,8 @@ private:
 	//Generator settings
 	int nodesExp = 7;
 	int numNodes = (1 << 7) + 1;
-	float minY = -0.15f;
-	float maxY = 0.15f;
+	float minHeight = -0.15f;
+	float maxHeight = 0.15f;
 	float roughness = 1.0f;
 	float heightSea = 0.05f;
 	float heightRock = 0.1f;

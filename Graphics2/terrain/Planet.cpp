@@ -52,12 +52,8 @@ void Planet::generateTerrain(int octDepth) {
 	LOD1 = Every other vertex
 	LOD2 = Every 4th vertex
 	Etc
-
-	Maximum verts per grid = 65k indices = max of 4 indices per vertex
-	Max verts per grid = 16k to be safe
-	Define grid size to be constant (MAX_VERTS by MAX_VERTS)
 	*/
-	numGrids = static_cast<int>(ceil(static_cast<float>(numNodes) / MAX_VERTS));
+	numGrids = numNodes / MAX_VERTS;
 	for (int l = 0; l < NUM_LOD; l++) {
 		std::cout << "Converting heightmap to meshes (LOD" << l << ")" << std::endl;
 		//For each face
@@ -104,19 +100,7 @@ void Planet::generateTerrain(int octDepth) {
 	//*/
 }
 
-//Optimise by tracking current + last face, only update visible faces?
-//Start at last centre grid and move out while update needed
-//Only update after sufficient movement
-
-//TODO Handle transformed planets
-
 void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::unordered_set<Mesh*> &highPoly) {
-	//Starting at current grid move out in each direction and change visibility if need be
-	//
-	//
-	//
-	//
-	//Convert position from sphere to cube
 	glm::vec3 unitPos = glm::normalize(pos);
 	float cubeScaling = 1.0f / glm::max(glm::max(abs(unitPos.x), abs(unitPos.y)), abs(unitPos.z));
 	glm::vec3 cubeMapping = cubeScaling * unitPos;
@@ -170,153 +154,104 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 	//Get grid position from pos
 	int gridX = glm::clamp(static_cast<int>(floor((numGrids - 1) * (xTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
 	int gridY = glm::clamp(static_cast<int>(floor((numGrids - 1) * (yTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
-	//Starting at gridX, gridY move out updating visibility if needed
-	struct Grid {
-		int x, y, f;
-	};
-	std::unordered_set<Grid*> toUpdate;
-	std::unordered_set<Grid*> updated;
-	{
-		Grid* start = new Grid();
-		start->x = gridX;
-		start->y = gridY;
-		start->f = face;
-		toUpdate.insert(start);
-	}
-	while (toUpdate.size() > 0) {
-		Grid* current = *toUpdate.begin();
-		toUpdate.erase(current);
-		updated.insert(current);
-		int x = current->x;
-		int y = current->y;
-		int f = current->f;
-		//Get centre node
-		int dX = MAX_VERTS;
-		int dY = MAX_VERTS;
-		if (x == numGrids - 1) {
-			dX = numNodes - x * MAX_VERTS;
-		}
-		if (y == numGrids - 1) {
-			dY = numNodes - y * MAX_VERTS;
-		}
-		int cX = x * MAX_VERTS + dX / 2;
-		int cY = y * MAX_VERTS + dY / 2;
-		//Compare centre and each corner's distance to position to determine LOD
-		float distSqr;
-		glm::vec3 centre = getVertex(cX, cY, f, heightSea);
-		glm::vec3 diff = centre - pos;
-		distSqr = glm::dot(diff, diff);
-		for (int x2 = -1; x < 2; x += 2) {
-			for (int y2 = -1; y < 2; y += 2) {
-				glm::vec3 point = getVertex(x * MAX_VERTS + dX * x2, y * MAX_VERTS + dY * y2, f, heightSea);
-				diff = point - pos;
-				float dist = glm::dot(diff, diff);
-				if (dist < distSqr) {
-					distSqr = dist;
+	std::cout << gridX << ", " << gridY << " (" << face << ")\n";
+	for(int f = 0; f < 6; f++) {
+		for (int x = 0; x < numGrids; x++) {
+			for (int y = 0; y < numGrids; y++) {
+				//Get centre node
+				int dX = MAX_VERTS;
+				int dY = MAX_VERTS;
+				if (x == numGrids - 1) {
+					dX = numNodes - x * MAX_VERTS;
+				}
+				if (y == numGrids - 1) {
+					dY = numNodes - y * MAX_VERTS;
+				}
+				int cX = x * MAX_VERTS + dX / 2;
+				int cY = y * MAX_VERTS + dY / 2;
+				//Compare centre and each corner's distance to position to determine LOD
+				float distSqr;
+				glm::vec3 centre = getVertex(cX, cY, f, heightSea);
+				glm::vec3 diff = centre - pos;
+				distSqr = glm::dot(diff, diff);
+				for (int x2 = -1; x2 < 2; x2 += 2) {
+					for (int y2 = -1; y2 < 2; y2 += 2) {
+						glm::vec3 point = getVertex(x * MAX_VERTS + dX * x2, y * MAX_VERTS + dY * y2, f, heightSea);
+						diff = point - pos;
+						float dist = glm::dot(diff, diff);
+						if (dist < distSqr) {
+							distSqr = dist;
+						}
+					}
+				}
+				int lod = NUM_LOD - 1;
+				//Cull back facing grids
+				if (glm::dot(centre, pos) < 0.0f) {
+					lod = -1;
+				}
+				while (lod > 0 && distSqr < LOD_Distances[lod]) { lod--; }
+				//Change in LOD found
+				if (lastLOD[f][x][y] != lod) {
+					PlanetMeshes m;
+					SceneObject* s = NULL;
+					//Hide old meshes
+					if (lastLOD[f][x][y] >= 0) {
+						m = LODS[lastLOD[f][x][y]][f][x][y];
+						if (m.grass) {
+							m.grass->setParent(s);
+						}
+						if (m.sea) {
+							m.sea->setParent(s);
+						}
+						if (m.rock) {
+							m.rock->setParent(s);
+						}
+						if (lastLOD[f][x][y] == 0) {
+							if (m.grass) {
+								highPoly.erase(m.grass);
+							}
+							if (m.sea) {
+								highPoly.erase(m.sea);
+							}
+							if (m.rock) {
+								highPoly.erase(m.rock);
+							}
+						}
+					}
+					//Show new meshes
+					if (lod >= 0) {
+						m = LODS[lod][f][x][y];
+						if (lod == 0) {
+							s = highLod;
+						} else if (lod > 0) {
+							s = lowLod;
+						}
+						if (m.grass) {
+							m.grass->setParent(s);
+						}
+						if (m.sea) {
+							m.sea->setParent(s);
+						}
+						if (m.rock) {
+							m.rock->setParent(s);
+						}
+						if (lod == 0) {
+							if (m.grass) {
+								highPoly.insert(m.grass);
+							}
+							if (m.sea) {
+								highPoly.insert(m.sea);
+							}
+							if (m.rock) {
+								highPoly.insert(m.rock);
+							}
+						}
+					}
+					//Update last LOD
+					lastLOD[f][x][y] = lod;
 				}
 			}
 		}
-		int lod = NUM_LOD - 1;
-		//Cull back facing grids
-		if (glm::dot(centre, pos) < 0.0f) {
-			lod = -1;
-		}
-		while (lod > 0 && distSqr < LOD_Distances[lod]) { lod--; }
-		//Change in LOD found
-		if (lastLOD[f][x][y] != lod) {
-			PlanetMeshes m;
-			SceneObject* s = NULL;
-			//Hide old meshes
-			if (lastLOD[f][x][y] >= 0) {
-				m = LODS[lastLOD[f][x][y]][f][x][y];
-				if (m.grass) {
-					m.grass->setParent(s);
-				}
-				if (m.sea) {
-					m.sea->setParent(s);
-				}
-				if (m.rock) {
-					m.rock->setParent(s);
-				}
-				if (lastLOD[f][x][y] == 0) {
-					if (m.grass) {
-						highPoly.erase(m.grass);
-					}
-					if (m.sea) {
-						highPoly.erase(m.sea);
-					}
-					if (m.rock) {
-						highPoly.erase(m.rock);
-					}
-				}
-			}
-			//Show new meshes
-			if (lod >= 0) {
-				m = LODS[lod][f][x][y];
-				if (lod == 0) {
-					s = highLod;
-				} else if (lod > 0) {
-					s = lowLod;
-				}
-				if (m.grass) {
-					m.grass->setParent(s);
-				}
-				if (m.sea) {
-					m.sea->setParent(s);
-				}
-				if (m.rock) {
-					m.rock->setParent(s);
-				}
-				if (lod == 0) {
-					if (m.grass) {
-						highPoly.insert(m.grass);
-					}
-					if (m.sea) {
-						highPoly.insert(m.sea);
-					}
-					if (m.rock) {
-						highPoly.insert(m.rock);
-					}
-				}
-			}
-			//Update last LOD
-			lastLOD[f][x][y] = lod;
-			//Add new grids to list
-			for (int i = 0; i < 4; i++) {
-				Grid* newGrid = new Grid();;
-				int nX, nY, nF;
-				nX = x;
-				nY = y;
-				nF = f;
-				switch (i) {
-				case 0:
-					nX++;
-					break;
-				case 1:
-					nX--;
-					break;
-				case 2:
-					nY++;
-					break;
-				case 3:
-					nY--;
-					break;
-				}
-				moveInBoundsGrid(nF, nX, nY);
-				newGrid->f = nF;
-				newGrid->x = nX;
-				newGrid->y = nY;
-				//If New Grid hasn't been updated already, schedule it
-				if (updated.find(newGrid) == updated.end()) {
-					toUpdate.insert(newGrid);
-				}
-			}
-		}
-		//Free memory
-		for (Grid* g : updated) {
-			delete g;
-		}
-		updated.clear();
 	}
 }
 
@@ -330,7 +265,7 @@ void Planet::setLODS(float lods[NUM_LOD]) {
 }
 
 void Planet::diamondSquare() {
-	std::uniform_real_distribution<float> uni(minY, maxY);
+	std::uniform_real_distribution<float> uni(minHeight, maxHeight);
 	std::default_random_engine rng(seed);
 	std::cout << "Creating corner nodes" << std::endl;
 	//Create corners
@@ -345,7 +280,7 @@ void Planet::diamondSquare() {
 	std::cout << "Applying diamond square algorithm" << std::endl;
 	//Iteratively apply DSA
 	int size = numNodes - 1;
-	float rand_var = (maxY - minY) / 2;
+	float rand_var = (maxHeight - minHeight) / 2;
 	while (size > 1) {
 		std::uniform_real_distribution<float> u(-rand_var, rand_var);
 		//Diamond stage

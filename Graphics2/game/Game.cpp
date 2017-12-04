@@ -9,6 +9,8 @@
 #define ATMOS_MIN 2000.0f
 #define ATMOS_MAX 6000.0f
 
+#define UPDATE_DIST 10000.0f
+
 void loadAssets(Game* game) {
 	std::string folder(SKYBOX_FOLDER);
 	//Skybox
@@ -130,6 +132,8 @@ Game::Game() {
 	lowSunLight->setParent(lowLodScene);
 	//Update visible geometry
 	forceVisualUpdate = true;
+	//Set correct scene
+	inFirstScene = true;
 }
 
 
