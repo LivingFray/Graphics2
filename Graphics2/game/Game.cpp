@@ -88,7 +88,7 @@ void generateTerrain(Game* game) {
 	game->otherWorld->generateTerrain(0);
 	SceneObject h;
 	std::unordered_set<Mesh*> hp;
-	game->otherWorld->updateVisible(&h, game->secondLowLodScene, game->portal->exitPortal->getPosition(), hp);
+	game->otherWorld->updateVisible(&h, game->secondLowLodScene, game->portal->exitPortal->getPosition() / game->lowLodScale, hp);
 	std::cout << "Terrain generated" << std::endl;
 }
 

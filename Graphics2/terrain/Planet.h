@@ -54,6 +54,7 @@ private:
 	void inline makeMeshes(int l, int face, int gridX, int gridY);
 	void inline setNode(float value, unsigned int face, unsigned int x, unsigned int y);
 	void moveInBounds(int &face, int &x, int &y);
+	void moveInBoundsGrid(int &face, int &x, int &y);
 	float getNode(int face, int x, int y);
 	glm::vec3 inline getVertex(int x, int y, int face);
 	glm::vec3 inline getVertex(int x, int y, int face, float height);

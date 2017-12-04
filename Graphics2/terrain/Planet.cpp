@@ -171,136 +171,153 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 	int gridX = glm::clamp(static_cast<int>(floor((numGrids - 1) * (xTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
 	int gridY = glm::clamp(static_cast<int>(floor((numGrids - 1) * (yTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
 	//Starting at gridX, gridY move out updating visibility if needed
-	bool changed;
-	int size = 1;
-	do {
-		changed = false;
-		//Initial position
-		int x = gridX - size / 2;
-		int y = gridY - size / 2;
-		int f = face;
-		//Which direction to move through the nodes
-		int addX = 1;
-		int addY = 0;
-		int numToUpdate = size * size - (size - 2) * (size - 2);
-		if (size == 1) {
-			numToUpdate = 1;
+	struct Grid {
+		int x, y, f;
+	};
+	std::unordered_set<Grid*> toUpdate;
+	std::unordered_set<Grid*> updated;
+	{
+		Grid* start = new Grid();
+		start->x = gridX;
+		start->y = gridY;
+		start->f = face;
+		toUpdate.insert(start);
+	}
+	while (toUpdate.size() > 0) {
+		Grid* current = *toUpdate.begin();
+		toUpdate.erase(current);
+		updated.insert(current);
+		int x = current->x;
+		int y = current->y;
+		int f = current->f;
+		//Get centre node
+		int dX = MAX_VERTS;
+		int dY = MAX_VERTS;
+		if (x == numGrids - 1) {
+			dX = numNodes - x * MAX_VERTS;
 		}
-		for (int i = 0; i < numToUpdate; i++) {
-			//Ensure grid coords are for correct face
-			x *= MAX_VERTS;
-			y *= MAX_VERTS;
-			moveInBounds(f, x, y);
-			x /= MAX_VERTS;
-			y /= MAX_VERTS;
-			//Get centre node
-			int dX = MAX_VERTS;
-			int dY = MAX_VERTS;
-			if (x == numGrids - 1) {
-				dX = numNodes - x * MAX_VERTS;
-			}
-			if (y == numGrids - 1) {
-				dY = numNodes - y * MAX_VERTS;
-			}
-			int cX = x * MAX_VERTS + dX / 2;
-			int cY = y * MAX_VERTS + dY / 2;
-			float distSqr;
-			glm::vec3 centre = getVertex(cX, cY, f, heightSea);
-			glm::vec3 diff = centre - pos;
-			distSqr = glm::dot(diff, diff);
-			for (int x2 = -1; x < 2; x+=2) {
-				for (int y2 = -1; y < 2; y+=2) {
-					glm::vec3 point = getVertex(x * MAX_VERTS + dX * x2, y * MAX_VERTS + dY * y2, f, heightSea);
-					diff = point - pos;
-					float dist = glm::dot(diff, diff);
-					if (dist < distSqr) {
-						distSqr = dist;
-					}
+		if (y == numGrids - 1) {
+			dY = numNodes - y * MAX_VERTS;
+		}
+		int cX = x * MAX_VERTS + dX / 2;
+		int cY = y * MAX_VERTS + dY / 2;
+		//Compare centre and each corner's distance to position to determine LOD
+		float distSqr;
+		glm::vec3 centre = getVertex(cX, cY, f, heightSea);
+		glm::vec3 diff = centre - pos;
+		distSqr = glm::dot(diff, diff);
+		for (int x2 = -1; x < 2; x += 2) {
+			for (int y2 = -1; y < 2; y += 2) {
+				glm::vec3 point = getVertex(x * MAX_VERTS + dX * x2, y * MAX_VERTS + dY * y2, f, heightSea);
+				diff = point - pos;
+				float dist = glm::dot(diff, diff);
+				if (dist < distSqr) {
+					distSqr = dist;
 				}
 			}
-			int lod = NUM_LOD - 1;
-			//Invisible grid
-			if (glm::dot(centre, pos) < 0.0f) {
-				lod = -1;
-			}
-			while (lod > 0 && distSqr < LOD_Distances[lod]) { lod--; }
-			//Change in LOD found
-			if (lastLOD[f][x][y] != lod) {
-				changed = true;
-				PlanetMeshes m;
-				SceneObject* s = NULL;
-				//Hide old meshes
-				if (lastLOD[f][x][y] >= 0) {
-					m = LODS[lastLOD[f][x][y]][f][x][y];
+		}
+		int lod = NUM_LOD - 1;
+		//Cull back facing grids
+		if (glm::dot(centre, pos) < 0.0f) {
+			lod = -1;
+		}
+		while (lod > 0 && distSqr < LOD_Distances[lod]) { lod--; }
+		//Change in LOD found
+		if (lastLOD[f][x][y] != lod) {
+			PlanetMeshes m;
+			SceneObject* s = NULL;
+			//Hide old meshes
+			if (lastLOD[f][x][y] >= 0) {
+				m = LODS[lastLOD[f][x][y]][f][x][y];
+				if (m.grass) {
+					m.grass->setParent(s);
+				}
+				if (m.sea) {
+					m.sea->setParent(s);
+				}
+				if (m.rock) {
+					m.rock->setParent(s);
+				}
+				if (lastLOD[f][x][y] == 0) {
 					if (m.grass) {
-						m.grass->setParent(s);
+						highPoly.erase(m.grass);
 					}
 					if (m.sea) {
-						m.sea->setParent(s);
+						highPoly.erase(m.sea);
 					}
 					if (m.rock) {
-						m.rock->setParent(s);
-					}
-					if (lastLOD[f][x][y] == 0) {
-						if (m.grass) {
-							highPoly.erase(m.grass);
-						}
-						if (m.sea) {
-							highPoly.erase(m.sea);
-						}
-						if (m.rock) {
-							highPoly.erase(m.rock);
-						}
+						highPoly.erase(m.rock);
 					}
 				}
-				//Show new meshes
-				if (lod >= 0) {
-					m = LODS[lod][f][x][y];
-					if (lod == 0) {
-						s = highLod;
-					} else if (lod > 0) {
-						s = lowLod;
-					}
+			}
+			//Show new meshes
+			if (lod >= 0) {
+				m = LODS[lod][f][x][y];
+				if (lod == 0) {
+					s = highLod;
+				} else if (lod > 0) {
+					s = lowLod;
+				}
+				if (m.grass) {
+					m.grass->setParent(s);
+				}
+				if (m.sea) {
+					m.sea->setParent(s);
+				}
+				if (m.rock) {
+					m.rock->setParent(s);
+				}
+				if (lod == 0) {
 					if (m.grass) {
-						m.grass->setParent(s);
+						highPoly.insert(m.grass);
 					}
 					if (m.sea) {
-						m.sea->setParent(s);
+						highPoly.insert(m.sea);
 					}
 					if (m.rock) {
-						m.rock->setParent(s);
-					}
-					if (lod == 0) {
-						if (m.grass) {
-							highPoly.insert(m.grass);
-						}
-						if (m.sea) {
-							highPoly.insert(m.sea);
-						}
-						if (m.rock) {
-							highPoly.insert(m.rock);
-						}
+						highPoly.insert(m.rock);
 					}
 				}
-				//Update last LOD
-				lastLOD[f][x][y] = lod;
 			}
-			//Get next grid
-			if (i == size - 1) {
-				addX = 0;
-				addY = 1;
-			} else if (i == (size - 1) * 2) {
-				addX = -1;
-				addY = 0;
-			} else if (i == (size - 1) * 3) {
-				addX = 0;
-				addY = -1;
+			//Update last LOD
+			lastLOD[f][x][y] = lod;
+			//Add new grids to list
+			for (int i = 0; i < 4; i++) {
+				Grid* newGrid = new Grid();;
+				int nX, nY, nF;
+				nX = x;
+				nY = y;
+				nF = f;
+				switch (i) {
+				case 0:
+					nX++;
+					break;
+				case 1:
+					nX--;
+					break;
+				case 2:
+					nY++;
+					break;
+				case 3:
+					nY--;
+					break;
+				}
+				moveInBoundsGrid(nF, nX, nY);
+				newGrid->f = nF;
+				newGrid->x = nX;
+				newGrid->y = nY;
+				//If New Grid hasn't been updated already, schedule it
+				if (updated.find(newGrid) == updated.end()) {
+					toUpdate.insert(newGrid);
+				}
 			}
-			x += addX;
-			y += addY;
 		}
-		size += 2;
-	} while (changed || size <= 3);
+		//Free memory
+		for (Grid* g : updated) {
+			delete g;
+		}
+		updated.clear();
+	}
 }
 
 void Planet::setLODS(float lods[NUM_LOD]) {
@@ -774,6 +791,119 @@ void Planet::moveInBounds(int & face, int & x, int & y) {
 	if (x >= heightmap[face].size() || x < 0 || y >= heightmap[face][x].size() || y < 0) {
 		//Damn it go for another pass
 		moveInBounds(face, x, y);
+	}
+}
+
+void Planet::moveInBoundsGrid(int& face, int& x, int& y) {
+	//Handle wrapping (mostly, don't expect large numbers to work)
+	if (face == FACE_POS_X) {
+		if (x < 0) {
+			face = FACE_POS_Z;
+			x += numGrids - 1;
+		} else if (x > numGrids - 1) {
+			face = FACE_NEG_Z;
+			x -= numGrids - 1;
+		} else if (y < 0) {
+			face = FACE_NEG_Y;
+			int tmp = numGrids - 1 + y;
+			y = numGrids - 1 - x;
+			x = tmp;
+		} else if (y > numGrids - 1) {
+			face = FACE_POS_Y;
+			int tmp = x;
+			x = numGrids - 1 - (y - (numGrids - 1));
+			y = tmp;
+		}
+	} else if (face == FACE_NEG_X) {
+		if (x < 0) {
+			face = FACE_NEG_Z;
+			x += numGrids - 1;
+		} else if (x > numGrids - 1) {
+			face = FACE_POS_Z;
+			x -= numGrids - 1;
+		} else if (y < 0) {
+			face = FACE_NEG_Y;
+			int tmp = -y;
+			y = x;
+			x = tmp;
+		} else if (y > numGrids - 1) {
+			face = FACE_POS_Y;
+			int tmp = (numGrids - 1) - x;
+			x = y - (numGrids - 1);
+			y = tmp;
+		}
+	} else if (face == FACE_POS_Y) {
+		if (x < 0) {
+			face = FACE_NEG_X;
+			int tmp = (numGrids - 1) + x;
+			x = (numGrids - 1) - y;
+			y = tmp;
+		} else if (x > numGrids - 1) {
+			face = FACE_POS_X;
+			int tmp = numGrids - 1 - (x - (numGrids - 1));
+			x = y;
+			y = tmp;
+		} else if (y < 0) {
+			face = FACE_POS_Z;
+			y += numGrids - 1;
+		} else if (y > numGrids - 1) {
+			face = FACE_NEG_Z;
+			x = numGrids - 1 - x;
+			y = numGrids - 1 - (y - (numGrids - 1));
+		}
+	} else if (face == FACE_NEG_Y) {
+		if (x < 0) {
+			face = FACE_NEG_X;
+			int tmp = -x;
+			x = y;
+			y = tmp;
+		} else if (x > numGrids - 1) {
+			face = FACE_POS_X;
+			int tmp = x - (numGrids - 1);
+			x = numGrids - 1 - y;
+			y = tmp;
+		} else if (y < 0) {
+			face = FACE_NEG_Z;
+			x = numGrids - 1 - x;
+			y = -y;
+		} else if (y > numGrids - 1) {
+			face = FACE_NEG_Z;
+			y -= numGrids - 1;
+		}
+	} else if (face == FACE_POS_Z) {
+		if (x < 0) {
+			face = FACE_NEG_X;
+			x += numGrids - 1;
+		} else if (x > numGrids - 1) {
+			face = FACE_POS_X;
+			x -= numGrids - 1;
+		} else if (y < 0) {
+			face = FACE_NEG_Y;
+			y = numGrids - 1 + y;
+		} else if (y > numGrids - 1) {
+			face = FACE_POS_Y;
+			y -= numGrids - 1;
+		}
+	} else if (face == FACE_NEG_Z) {
+		if (x < 0) {
+			face = FACE_POS_X;
+			x += numGrids - 1;
+		} else if (x > numGrids - 1) {
+			face = FACE_NEG_X;
+			x -= numGrids - 1;
+		} else if (y < 0) {
+			face = FACE_NEG_Y;
+			x = numGrids - 1 - x;
+			y = -y;
+		} else if (y > numGrids - 1) {
+			face = FACE_POS_Y;
+			x = numGrids - 1 - x;
+			y = numGrids - 1 - (y - (numGrids - 1));
+		}
+	}
+	if (x >= numGrids || x < 0 || y >= numGrids || y < 0) {
+		//Damn it go for another pass
+		moveInBoundsGrid(face, x, y);
 	}
 }
 
