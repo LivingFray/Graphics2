@@ -1,4 +1,5 @@
 #include "Mesh.h"
+#include "Scene.h"
 
 Mesh::Mesh() {
 	shader = Shader("shaders/multiLight.vert", "shaders/multiLight.frag");
@@ -101,6 +102,8 @@ void Mesh::render(Camera* cam, GLuint depthMap, glm::mat4& LSM) {
 	glUniform3fv(glGetUniformLocation(program, "viewPos"), 1, &(cam->getGlobalPosition())[0]);
 	//Shadows
 	glUniformMatrix4fv(glGetUniformLocation(program, "lightSpaceMatrix"), 1, false, &LSM[0][0]);
+	//Update lighting
+	getScene()->updateLights();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementBuffer);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_SHORT, 0);
 

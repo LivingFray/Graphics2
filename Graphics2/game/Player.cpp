@@ -101,6 +101,9 @@ void Player::keyEvent(GLFWwindow* window, int key, int scancode, int action, int
 			shipSpeed /= 100.0f;
 		}
 	}
+	if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
+		game->dialGate();
+	}
 }
 
 void Player::setGame(Game* g) {

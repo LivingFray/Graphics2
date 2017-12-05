@@ -11,6 +11,8 @@
 
 #define OCTDEPTH 0
 
+#define DIAL_TIME 0.5
+
 void loadAssets(Game* game) {
 	std::string folder(SKYBOX_FOLDER);
 	//Skybox
@@ -39,17 +41,17 @@ void loadAssets(Game* game) {
 	game->portal->exitPortal->setParent(game->secondLowLodScene);
 	game->portal->exitPortal->setPosition(glm::vec3(game->lowLodScale * 38000.0f, 0.0f, 0.0f));
 	game->portal->exitPortal->setRotation(glm::quat(glm::vec3(-glm::half_pi<float>(), glm::half_pi<float>(), 0.0f)));
-	game->portal->setParent(game->transformedSpace);
+	//game->portal->setParent(game->transformedSpace);
 	game->portal->renderView = new Camera();
 	game->portal->renderView->setParent(game->portal->exitPortal);
 	game->portal->renderView->setNear(0.1f);
 	game->portal->renderView->setFar(1000.0f);
 	//Gate
-	Model* gate = new Model();
-	gate->loadModel("assets/portal/gate.obj");
-	gate->setParent(game->transformedSpace);
-	gate->setPosition(glm::vec3(38000.0f, 0.0f, -10.0f));
-	gate->setRotation(glm::quat(glm::vec3(-glm::half_pi<float>(), 0.0f, 0.0f)));
+	game->gate = new Model();
+	game->gate->loadModel("assets/portal/gate.obj");
+	game->gate->setParent(game->transformedSpace);
+	game->gate->setPosition(glm::vec3(38000.0f, 0.0f, -10.0f));
+	game->gate->setRotation(glm::quat(glm::vec3(-glm::half_pi<float>(), 0.0f, 0.0f)));
 	std::cout << "All assets loaded" << std::endl;
 
 }
@@ -75,7 +77,7 @@ void generateTerrain(Game* game) {
 	game->otherWorld = new Planet();
 	game->otherWorld->planetScale = 15000.0f;
 	game->otherWorld->lowLodScale = game->lowLodScale;
-	float lod2[] = { 5000.0f, 8000.0f, 12000.0f, 16000.0f };
+	float lod2[] = { 2000.0f, 4000.0f, 8000.0f, 16000.0f };
 	game->otherWorld->setLODS(lod2);
 	//Make world look martian
 	game->otherWorld->setLandTexture(OpenGLSetup::loadImage("assets/terrain/marsRock.png"));
@@ -111,7 +113,7 @@ Game::Game() {
 	loadAssets(this);
 	//Lighting
 	std::cout << "Loading lighting..." << std::endl;
-	scene->ambientLight = glm::vec3(0.9f);
+	scene->ambientLight = glm::vec3(0.2f);
 	DirectionalLight* sunLight = new DirectionalLight();
 	sunLight->colour = glm::vec3(0.8f, 0.8f, 0.8f);
 	sunLight->direction = glm::vec3(0.0f, -1.0f, 0.0f);
@@ -120,6 +122,19 @@ Game::Game() {
 	sunLight->colour = glm::vec3(0.8f, 0.8f, 0.8f);
 	sunLight->direction = glm::vec3(0.0f, -1.0f, 0.0f);
 	sunLight->setParent(secondLowLodScene);
+	float radius = 2.7f;
+	float raise = -0.5f;
+	for (int i = 0; i < 8; i++) {
+		PointLight* p = new PointLight();
+		p->colour = glm::vec3(1.0f, 0.0f, 0.0f);
+		p->constant = 1.0;
+		p->linear = 0.7f;
+		p->quadratic = 1.8f;
+		float ang = i * glm::two_pi<float>() / 8;
+		p->setPosition(glm::vec3(sinf(ang) * radius, raise, cosf(ang) * radius));
+		p->setParent(gate);
+		gateLights[i] = p;
+	}
 	//Terrain
 	generateTerrain(this);
 	//Secondary, high distance camera
@@ -135,6 +150,9 @@ Game::Game() {
 	forceVisualUpdate = true;
 	//Set correct scene
 	inFirstScene = true;
+	//Set animation states
+	dialTime = 0;
+	dialState = 0;
 }
 
 
@@ -150,6 +168,11 @@ Game::~Game() {
 	}
 	if (player) {
 		delete player;
+	}
+	for (int i = 0; i < 8; i++) {
+		if (gateLights[i]) {
+			delete gateLights[i];
+		}
 	}
 }
 
@@ -172,14 +195,25 @@ void Game::update(double dt) {
 		if (highPoly.size() > 0) {
 			std::cout << highPoly.size() << std::endl;
 		}
-		for(Mesh* m: highPoly) {
-			if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
-				worldPos = oldPos;
-				break;
-			}
-		}
+		//for(Mesh* m: highPoly) {
+		//	if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
+		//		worldPos = oldPos;
+		//		break;
+		//	}
+		//}
 		//*/
 		forceVisualUpdate = false;
+	}
+	if (dialState > 0 && dialState < 9) {
+		dialTime += dt;
+		if (dialTime > DIAL_TIME) {
+			dialTime -= DIAL_TIME;
+			dialState++;
+			gateLights[dialState - 2]->colour = glm::vec3(0.0f, 1.0f, 0.0f);
+			if (dialState == 9) {
+				portal->setParent(transformedSpace);
+			}
+		}
 	}
 }
 
@@ -192,4 +226,13 @@ void Game::draw() {
 	lowLodCam->render();
 	transformedSpace->setPosition(-worldPos);
 	cam->render();
+}
+
+void Game::dialGate() {
+	if (dialState == 0) {
+		dialState = 1;
+	}
+}
+
+void Game::enterGate() {
 }

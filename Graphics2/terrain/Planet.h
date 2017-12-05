@@ -7,7 +7,7 @@
 
 //Graphical settings (LOD)
 #define NUM_LOD 4
-#define MAX_VERTS (1 << 4)
+#define MAX_VERTS (1 << 3)
 
 class Planet {
 public:

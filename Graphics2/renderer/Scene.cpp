@@ -100,11 +100,10 @@ void Scene::renderSkybox(Camera* c) {
 
 void Scene::updateLights() {
 	GLuint program = meshShader.getProgram();
-	glUseProgram(program);
 	glUniform3fv(glGetUniformLocation(program, "ambient"), 1, &ambientLight[0]);
 	//Update directional light
 	if (dirLight) {
-		glm::vec3 dir =glm::vec3(dirLight->getGlobalMatrix() * glm::vec4(dirLight->direction, 1.0f));
+		glm::vec3 dir = glm::vec3(dirLight->getGlobalMatrix() * glm::vec4(dirLight->direction, 1.0f));
 		glUniform3fv(glGetUniformLocation(program, "dirLight.direction"), 1, &dir[0]);
 		glUniform3fv(glGetUniformLocation(program, "dirLight.colour"), 1, &dirLight->colour[0]);
 	}
@@ -137,7 +136,6 @@ void Scene::updateLights() {
 		i++;
 	}
 	glUniform1i(glGetUniformLocation(program, "numSpotLights"), spotLights.size());
-	glUseProgram(0);
 }
 
 DirectionalLight* Scene::getDirectionalLight() {

@@ -156,7 +156,6 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 	int gridX = glm::clamp(static_cast<int>(floor((numGrids - 1) * (xTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
 	int gridY = glm::clamp(static_cast<int>(floor((numGrids - 1) * (yTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
 	float height = glm::dot(pos, pos);
-	std::cout << sqrt(height) << std::endl;
 	int lod = NUM_LOD - 1;
 	while (lod > 1 && height < LOD_Distances[lod]) { lod--; }
 	for (int f = 0; f < 6; f++) {
@@ -460,7 +459,7 @@ inline void Planet::makeMeshes(int l, int face, int gridX, int gridY) {
 		lastLOD[face].push_back(last);
 	}
 	if (lastLOD[face][gridX].size() <= static_cast<unsigned int>(gridY)) {
-		lastLOD[face][gridX].push_back(0);
+		lastLOD[face][gridX].push_back(-1);
 	}
 	//Set mesh
 	if (ind_sea.size() > 0) {

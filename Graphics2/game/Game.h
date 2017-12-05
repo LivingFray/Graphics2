@@ -17,6 +17,8 @@ public:
 	void keyEvent(GLFWwindow* window, int key, int scancode, int action, int mods);
 	void update(double dt);
 	void draw();
+	void dialGate();
+	void enterGate();
 	glm::vec3 worldPos;
 	const float lowLodScale = 1.0f/1000.0f;
 private:
@@ -30,5 +32,10 @@ private:
 	bool forceVisualUpdate;
 	std::unordered_set<Mesh*> highPoly;
 	bool inFirstScene;
+	Model* gate;
+	//Variables relating to gate dialing animation
+	PointLight* gateLights[8];
+	float dialTime;
+	int dialState;
 };
 

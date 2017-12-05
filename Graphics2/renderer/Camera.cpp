@@ -106,8 +106,6 @@ void Camera::render(GLuint target) {
 	glBindFramebuffer(GL_FRAMEBUFFER, target);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
-	//TODO: space partitioning and culling and such
-	getScene()->updateLights();
 	set<Renderable*> renderables = getScene()->getRenderables();
 	//Directional lighting shadows
 	DirectionalLight* d = getScene()->getDirectionalLight();
