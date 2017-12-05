@@ -9,7 +9,7 @@
 #define ATMOS_MIN 2000.0f
 #define ATMOS_MAX 6000.0f
 
-#define UPDATE_DIST 10000.0f
+#define OCTDEPTH 0
 
 void loadAssets(Game* game) {
 	std::string folder(SKYBOX_FOLDER);
@@ -25,7 +25,7 @@ void loadAssets(Game* game) {
 	std::cout << "Loading models..." << std::endl;
 	game->player = new Player();
 	game->player->setGame(game);
-	game->player->getShip()->createOctrees(2);
+	game->player->getShip()->createOctrees(1);
 	game->worldPos = glm::vec3(38000.0f, 0.0f, 0.0f);
 	//Portal
 	game->portal = new Portal();
@@ -60,34 +60,35 @@ void generateTerrain(Game* game) {
 	game->homeWorld = new Planet();
 	game->homeWorld->planetScale = 30000.0f;
 	game->homeWorld->lowLodScale = game->lowLodScale;
-	float lod[] = {1000.0f, 4000.0f, 8000.0f, 64000.0f };
+	float lod[] = { 2000.0f, 4000.0f, 8000.0f, 16000.0f };
 	game->homeWorld->setLODS(lod);
+	game->homeWorld->lowLodHeight = 500.0f;
 	//Make world look gaian
 	game->homeWorld->setLandTexture(OpenGLSetup::loadImage("assets/terrain/grass.png"));
 	game->homeWorld->setSeaTexture(OpenGLSetup::loadImage("assets/terrain/water.png"));
 	game->homeWorld->setSeaSpecular(OpenGLSetup::loadImage("assets/terrain/white.png"));
 	game->homeWorld->setRockTexture(OpenGLSetup::loadImage("assets/terrain/rock.png"));
 	//Generate terrain
-	game->homeWorld->generateTerrain(0);
+	game->homeWorld->generateTerrain(OCTDEPTH);
 	std::cout << "Homeworld generated" << std::endl;
 	//Other planet
 	game->otherWorld = new Planet();
 	game->otherWorld->planetScale = 15000.0f;
 	game->otherWorld->lowLodScale = game->lowLodScale;
-	float lod2[] = { 1000.0f, 4000.0f, 8000.0f, 64000.0f };
+	float lod2[] = { 5000.0f, 8000.0f, 12000.0f, 16000.0f };
 	game->otherWorld->setLODS(lod2);
 	//Make world look martian
 	game->otherWorld->setLandTexture(OpenGLSetup::loadImage("assets/terrain/marsRock.png"));
 	game->otherWorld->setSeaTexture(OpenGLSetup::loadImage("assets/terrain/marsRock.png"));
 	game->otherWorld->setRockTexture(OpenGLSetup::loadImage("assets/terrain/marsRock.png"));
 	//Adjust terrain parameters
-	game->otherWorld->setMinY(-0.10f);
-	game->otherWorld->setMaxY(0.10f);
+	game->otherWorld->setMinY(-0.05f);
+	game->otherWorld->setMaxY(0.05f);
 	game->otherWorld->setSeaHeight(0.0f);
 	game->otherWorld->setRoughness(0.5f);
 	game->otherWorld->setNodeExp(6);
 	//Generate terrain
-	game->otherWorld->generateTerrain(0);
+	game->otherWorld->generateTerrain(OCTDEPTH);
 	SceneObject h;
 	std::unordered_set<Mesh*> hp;
 	game->otherWorld->updateVisible(&h, game->secondLowLodScene, game->portal->exitPortal->getPosition() / game->lowLodScale, hp);
@@ -110,7 +111,7 @@ Game::Game() {
 	loadAssets(this);
 	//Lighting
 	std::cout << "Loading lighting..." << std::endl;
-	scene->ambientLight = glm::vec3(0.2f);
+	scene->ambientLight = glm::vec3(0.9f);
 	DirectionalLight* sunLight = new DirectionalLight();
 	sunLight->colour = glm::vec3(0.8f, 0.8f, 0.8f);
 	sunLight->direction = glm::vec3(0.0f, -1.0f, 0.0f);
@@ -127,7 +128,7 @@ Game::Game() {
 	lowLodCam->setFar(1000.0f);
 	lowLodCam->setParent(lowLodScene);
 	DirectionalLight* lowSunLight = new DirectionalLight();
-	lowSunLight->colour = glm::vec3(0.8f, 0.8f, 0.68);
+	lowSunLight->colour = glm::vec3(0.8f, 0.8f, 0.8f);
 	lowSunLight->direction = glm::vec3(0.0f, -1.0f, 0.0f);
 	lowSunLight->setParent(lowLodScene);
 	//Update visible geometry
@@ -168,6 +169,9 @@ void Game::update(double dt) {
 	if (forceVisualUpdate || oldPos != worldPos) {
 		p->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);
 		//*
+		if (highPoly.size() > 0) {
+			std::cout << highPoly.size() << std::endl;
+		}
 		for(Mesh* m: highPoly) {
 			if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
 				worldPos = oldPos;

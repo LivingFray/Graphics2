@@ -21,6 +21,7 @@ public:
 
 	float planetScale = 1.0f;
 	float lowLodScale = 1.0f;
+	float lowLodHeight = 1.0f;
 	unsigned int seed;
 
 	void setNodeExp(int exp) { if (exp > 0) { nodesExp = exp; numNodes = (1 << exp) + 1; } }
@@ -59,6 +60,7 @@ private:
 	glm::vec3 inline getVertex(int x, int y, int face);
 	glm::vec3 inline getVertex(int x, int y, int face, float height);
 	void inline addTriangle(int l, int f, int (&xs)[6], int (&ys)[6]);
+	void inline changeLod(int f, int x, int y, int lod, SceneObject* highLod, SceneObject* lowLod, std::unordered_set<Mesh*> &highPoly);
 
 
 	//LOD helper function

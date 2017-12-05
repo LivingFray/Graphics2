@@ -101,7 +101,65 @@ void Planet::generateTerrain(int octDepth) {
 }
 
 void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::unordered_set<Mesh*> &highPoly) {
-	for(int f = 0; f < 6; f++) {
+	//Determine grid position of pos
+	glm::vec3 unitPos = glm::normalize(pos);
+	float cubeScaling = 1.0f / glm::max(glm::max(abs(unitPos.x), abs(unitPos.y)), abs(unitPos.z));
+	glm::vec3 cubeMapping = cubeScaling * unitPos;
+	//Determine face position is on
+	int face;
+	if (cubeMapping.x < -1.0f + 1e-5f) {
+		face = FACE_NEG_X;
+	} else if (cubeMapping.x > 1.0f - 1e-5f) {
+		face = FACE_POS_X;
+	} else if (cubeMapping.y < -1.0f + 1e-5f) {
+		face = FACE_NEG_Y;
+	} else if (cubeMapping.y > 1.0f - 1e-5f) {
+		face = FACE_POS_Y;
+	} else if (cubeMapping.z < -1.0f + 1e-5f) {
+		face = FACE_NEG_Z;
+	} else if (cubeMapping.z > 1.0f - 1e-5f) {
+		face = FACE_POS_Z;
+	}
+	//Get axes needed to calculate grid position
+	float xTrans;
+	float yTrans;
+	switch (face) {
+	case FACE_NEG_X:
+		xTrans = cubeMapping.y;
+		yTrans = cubeMapping.z;
+		break;
+	case FACE_POS_X:
+		xTrans = cubeMapping.y;
+		yTrans = -cubeMapping.z;
+		break;
+	case FACE_NEG_Y:
+		xTrans = cubeMapping.z;
+		yTrans = cubeMapping.x;
+		break;
+	case FACE_POS_Y:
+		xTrans = -cubeMapping.z;
+		yTrans = cubeMapping.x;
+		break;
+	case FACE_NEG_Z:
+		xTrans = cubeMapping.y;
+		yTrans = -cubeMapping.x;
+		break;
+	case FACE_POS_Z:
+		xTrans = cubeMapping.y;
+		yTrans = cubeMapping.x;
+		break;
+	default:
+		xTrans = 0.0f;
+		yTrans = 0.0f;
+	}
+	//Get grid position from pos
+	int gridX = glm::clamp(static_cast<int>(floor((numGrids - 1) * (xTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
+	int gridY = glm::clamp(static_cast<int>(floor((numGrids - 1) * (yTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
+	float height = glm::dot(pos, pos);
+	std::cout << sqrt(height) << std::endl;
+	int lod = NUM_LOD - 1;
+	while (lod > 1 && height < LOD_Distances[lod]) { lod--; }
+	for (int f = 0; f < 6; f++) {
 		for (int x = 0; x < numGrids; x++) {
 			for (int y = 0; y < numGrids; y++) {
 				//Get centre node
@@ -115,89 +173,89 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 				}
 				int cX = x * MAX_VERTS + dX / 2;
 				int cY = y * MAX_VERTS + dY / 2;
-				//Compare centre and each corner's distance to position to determine LOD
-				float distSqr;
 				glm::vec3 centre = getVertex(cX, cY, f, heightSea);
-				glm::vec3 diff = centre - pos;
-				distSqr = glm::dot(diff, diff);
-				for (int x2 = -1; x2 < 2; x2 += 2) {
-					for (int y2 = -1; y2 < 2; y2 += 2) {
-						glm::vec3 point = getVertex(x * MAX_VERTS + dX * x2, y * MAX_VERTS + dY * y2, f, heightSea);
-						diff = point - pos;
-						float dist = glm::dot(diff, diff);
-						if (dist < distSqr) {
-							distSqr = dist;
-						}
-					}
-				}
-				int lod = NUM_LOD - 1;
 				//Cull back facing grids
 				if (glm::dot(centre, pos) < 0.0f) {
 					lod = -1;
 				}
-				while (lod > 0 && distSqr < LOD_Distances[lod]) { lod--; }
 				//Change in LOD found
-				if (lastLOD[f][x][y] != lod) {
-					PlanetMeshes m;
-					SceneObject* s = NULL;
-					//Hide old meshes
-					if (lastLOD[f][x][y] >= 0) {
-						m = LODS[lastLOD[f][x][y]][f][x][y];
-						if (m.grass) {
-							m.grass->setParent(s);
-						}
-						if (m.sea) {
-							m.sea->setParent(s);
-						}
-						if (m.rock) {
-							m.rock->setParent(s);
-						}
-						if (lastLOD[f][x][y] == 0) {
-							if (m.grass) {
-								highPoly.erase(m.grass);
-							}
-							if (m.sea) {
-								highPoly.erase(m.sea);
-							}
-							if (m.rock) {
-								highPoly.erase(m.rock);
-							}
-						}
-					}
-					//Show new meshes
-					if (lod >= 0) {
-						m = LODS[lod][f][x][y];
-						if (lod == 0) {
-							s = highLod;
-						} else if (lod > 0) {
-							s = lowLod;
-						}
-						if (m.grass) {
-							m.grass->setParent(s);
-						}
-						if (m.sea) {
-							m.sea->setParent(s);
-						}
-						if (m.rock) {
-							m.rock->setParent(s);
-						}
-						if (lod == 0) {
-							if (m.grass) {
-								highPoly.insert(m.grass);
-							}
-							if (m.sea) {
-								highPoly.insert(m.sea);
-							}
-							if (m.rock) {
-								highPoly.insert(m.rock);
-							}
-						}
-					}
-					//Update last LOD
-					lastLOD[f][x][y] = lod;
+				changeLod(f, x, y, lod, highLod, lowLod, highPoly);
+			}
+		}
+	}
+	//Make closest grids high res if near enough
+	if (height < LOD_Distances[0]) {
+		for (int gx = -1; gx < 2; gx++) {
+			for (int gy = -1; gy < 2; gy++) {
+				int grX = gridX + gx;
+				int grY = gridY + gy;
+				int grF = face;
+				moveInBoundsGrid(grF, grX, grY);
+				changeLod(grF, grX, grY, 0, highLod, lowLod, highPoly);
+			}
+		}
+	}
+}
+
+void inline Planet::changeLod(int f, int x, int y, int lod, SceneObject* highLod, SceneObject* lowLod, std::unordered_set<Mesh*> &highPoly) {
+	if (lastLOD[f][x][y] != lod) {
+		PlanetMeshes m;
+		SceneObject* s = NULL;
+		//Hide old meshes
+		if (lastLOD[f][x][y] >= 0) {
+			m = LODS[lastLOD[f][x][y]][f][x][y];
+			if (m.grass) {
+				m.grass->setParent(s);
+			}
+			if (m.sea) {
+				m.sea->setParent(s);
+			}
+			if (m.rock) {
+				m.rock->setParent(s);
+			}
+			if (lastLOD[f][x][y] == 0) {
+				if (m.grass) {
+					highPoly.erase(m.grass);
+				}
+				if (m.sea) {
+					highPoly.erase(m.sea);
+				}
+				if (m.rock) {
+					highPoly.erase(m.rock);
 				}
 			}
 		}
+		//Show new meshes
+		if (lod >= 0) {
+			m = LODS[lod][f][x][y];
+			if (lod == 0) {
+				s = highLod;
+			} else if (lod > 0) {
+				s = lowLod;
+			}
+			if (m.grass) {
+				m.grass->setParent(s);
+			}
+			if (m.sea) {
+				m.sea->setParent(s);
+			}
+			if (m.rock) {
+				m.rock->setParent(s);
+			}
+			if (lod == 0) {
+				if (m.grass) {
+					highPoly.insert(m.grass);
+				}
+				if (m.sea) {
+					highPoly.insert(m.sea);
+				}
+				if (m.rock) {
+					highPoly.insert(m.rock);
+				}
+			}
+		}
+		//Update last LOD
+		lastLOD[f][x][y] = lod;
 	}
 }
 
@@ -205,7 +263,8 @@ void Planet::setLODS(float lods[NUM_LOD]) {
 	//Copy values (square for cheaper distance checks)
 	//No error checks, because its your own damn fault if it breaks
 	for (int i = 0; i < NUM_LOD; i++) {
-		LOD_Distances[i] = lods[i] * lods[i];
+		float l = lods[i] + planetScale;
+		LOD_Distances[i] = l * l;
 	}
 
 }
