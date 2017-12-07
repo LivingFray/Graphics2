@@ -6,12 +6,11 @@ For example these can be:
 -Objects that can be rendered (Renderables)
 -The scene itself, technically
 -Grouping objects
--Something else I haven't thought of at the time of writing this
 */
-#include<vector>
+#include <unordered_set>
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
-using std::vector;
+using std::unordered_set;
 class Scene;
 
 class SceneObject {
@@ -28,7 +27,7 @@ public:
 	//Gets the scene the object occupies
 	Scene* getScene() { return scene; };
 	//Gets the children of the object
-	const vector<SceneObject*>& getChildren() const { return children; };
+	const unordered_set<SceneObject*>& getChildren() const { return children; };
 	//Checks if the child is a direct child of the object
 	bool hasChild(SceneObject* child);
 	//Checks if the child is a descendent of the object
@@ -63,7 +62,7 @@ protected:
 private:
 	Scene* scene;
 	SceneObject* parent;
-	vector<SceneObject*> children;
+	unordered_set<SceneObject*> children;
 	glm::vec3 pos;
 	glm::vec3 scale;
 	glm::quat rot;

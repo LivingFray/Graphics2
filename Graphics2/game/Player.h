@@ -1,6 +1,7 @@
 #pragma once
 #include "../renderer/Model.h"
 #include "../renderer/Camera.h"
+#include "../renderer/SpotLight.h"
 
 enum class CurrentCamera {COCKPIT, ORBITAL};
 
@@ -17,6 +18,12 @@ public:
 		return ship;
 	};
 	Camera* getActiveCamera();
+	bool canMove;
+	bool forceCockpit;
+	bool canDialGate;
+	const float slowSpeed = 10.0f;
+	const float midSpeed = 100.0f;
+	const float fastSpeed = 1000.0f;
 private:
 	void moveCockpitCamera();
 	void rotateShip();
@@ -30,5 +37,6 @@ private:
 	float shipSpeed = 10.0f;
 	bool boostSpeed = false;
 	CurrentCamera activeCam;
+	SpotLight* dialReady;
 };
 

@@ -196,6 +196,17 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 	}
 }
 
+void Planet::hide() {
+	std::unordered_set<Mesh*> hp;
+	for (int f = 0; f < 6; f++) {
+		for (int x = 0; x < numGrids; x++) {
+			for (int y = 0; y < numGrids; y++) {
+				changeLod(f, x, y, -1, NULL, NULL, hp);
+			}
+		}
+	}
+}
+
 void inline Planet::changeLod(int f, int x, int y, int lod, SceneObject* highLod, SceneObject* lowLod, std::unordered_set<Mesh*> &highPoly) {
 	if (lastLOD[f][x][y] != lod) {
 		PlanetMeshes m;
@@ -267,6 +278,7 @@ void Planet::setLODS(float lods[NUM_LOD]) {
 	}
 
 }
+
 
 void Planet::diamondSquare() {
 	std::uniform_real_distribution<float> uni(minHeight, maxHeight);

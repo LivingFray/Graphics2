@@ -57,7 +57,9 @@ void Portal::render(Camera* cam, GLuint depthMap, glm::mat4& LSM) {
 		portalSurface->setLocalMatrix(this->getGlobalMatrix());
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, renderTo);
+		glDepthMask(GL_FALSE);
 		portalSurface->renderShadow(portal.getProgram());
+		glDepthMask(GL_TRUE);
 		glUseProgram(0);
 	}
 }

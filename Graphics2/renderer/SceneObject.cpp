@@ -41,9 +41,8 @@ bool SceneObject::setParent(SceneObject* obj) {
 		std::cerr << "Circular reference in object hierarchy" << std::endl;
 		throw;
 	}
-	this->parent = obj;
 	if (obj) {
-		obj->children.push_back(this);
+		obj->children.insert(this);
 		//Ensure correct scene
 		if (dynamic_cast<Scene*>(obj)) {
 			setScene(dynamic_cast<Scene*>(obj));
@@ -51,8 +50,12 @@ bool SceneObject::setParent(SceneObject* obj) {
 			setScene(obj->scene);
 		}
 	} else {
+		if (this->parent) {
+			this->parent->children.erase(this);
+		}
 		setScene(NULL);
 	}
+	this->parent = obj;
 	return true;
 }
 

@@ -1,8 +1,8 @@
 #include "Game.h"
-
 #include <iostream>
-
 #include "../renderer/Cube.h"
+#include "../renderer/glm/gtc/matrix_transform.hpp"
+
 
 #define SKYBOX_FOLDER "skybox"
 
@@ -11,7 +11,15 @@
 
 #define OCTDEPTH 0
 
-#define DIAL_TIME 0.5
+#define DIAL_TIME 0.5f
+
+#define DIAL_DISTANCE 50.0f
+
+#define DIAL_ROTATE 2.0f
+
+#define DIAL_STAGE_PORTAL 9
+#define DIAL_STAGE_MOVE 10
+#define DIAL_STAGE_STOP_MOVE 11
 
 void loadAssets(Game* game) {
 	std::string folder(SKYBOX_FOLDER);
@@ -41,7 +49,6 @@ void loadAssets(Game* game) {
 	game->portal->exitPortal->setParent(game->secondLowLodScene);
 	game->portal->exitPortal->setPosition(glm::vec3(game->lowLodScale * 38000.0f, 0.0f, 0.0f));
 	game->portal->exitPortal->setRotation(glm::quat(glm::vec3(-glm::half_pi<float>(), glm::half_pi<float>(), 0.0f)));
-	//game->portal->setParent(game->transformedSpace);
 	game->portal->renderView = new Camera();
 	game->portal->renderView->setParent(game->portal->exitPortal);
 	game->portal->renderView->setNear(0.1f);
@@ -181,13 +188,58 @@ void Game::keyEvent(GLFWwindow* window, int key, int scancode, int action, int m
 }
 
 void Game::update(double dt) {
-	Planet* p = inFirstScene ? homeWorld : otherWorld;
 	//TODO: Change strength of light depending on occlusion of planet
 	glm::vec3 oldPos = worldPos;
-	if (player) {
-		player->update(dt);
-		lowLodScene->skyAmount = 1.0f - glm::clamp((glm::length(worldPos) - p->planetScale - ATMOS_MIN)/(ATMOS_MAX - ATMOS_MIN), 0.0f, 1.0f);
+	player->update(dt);
+	if (dialState > 0 && dialState < 12) {
+		if (dialState == 1 && rotationProgress < 1.0f) {
+			rotationProgress += dt / DIAL_ROTATE;
+			rotationProgress = glm::min(1.0f, rotationProgress);
+			gate->setRotation(glm::slerp(startGateRotation, requiredGateRotation, rotationProgress));
+			player->getShip()->setRotation(glm::slerp(startShipRotation, requiredShipRotation, rotationProgress));
+		} else {
+			dialTime += dt;
+			if (dialTime > DIAL_TIME) {
+				dialTime -= DIAL_TIME;
+				int old = dialState;
+				if (dialState != DIAL_STAGE_MOVE) {
+					dialState++;
+				}
+				if (dialState < 10) {
+					gateLights[dialState - 2]->colour = glm::vec3(0.0f, 1.0f, 0.0f);
+				}
+				if (dialState == DIAL_STAGE_PORTAL && old != DIAL_STAGE_PORTAL) {
+					portal->setParent(transformedSpace);
+					portal->setRotation(gate->getRotation());
+				}
+			}
+			if (dialState == 10) {
+				worldPos += player->getShip()->getFront() * player->slowSpeed * static_cast<float>(dt);
+				//Check if camera has crossed threshold of portal
+				glm::vec3 front = player->getActiveCamera()->getGlobalPosition() + player->getShip()->getFront() * 0.5f;
+				front -= gate->getGlobalPosition();
+				glm::vec3 back = player->getActiveCamera()->getGlobalPosition() + player->getShip()->getFront() * -100.0f;
+				back -= gate->getGlobalPosition();
+				if (glm::dot(front, back) < 0.0f) {
+					dialState = 11;
+					dialTime = 0.0f;
+					enterGate();
+				}
+			}else if (dialState == 11) {
+				worldPos += player->getShip()->getFront() * player->slowSpeed * static_cast<float>(dt);
+			}
+			if (dialState == 12) {
+				//Restore control of ship
+				player->canMove = true;
+				player->forceCockpit = false;
+			}
+		}
+	} else if(dialState == 0) {
+		glm::vec3 p = gate->getGlobalPosition();
+		player->canDialGate = glm::dot(p, p) < DIAL_DISTANCE * DIAL_DISTANCE;
 	}
+	Planet* p = inFirstScene ? homeWorld : otherWorld;
+	lowLodScene->skyAmount = 1.0f - glm::clamp((glm::length(worldPos) - p->planetScale - ATMOS_MIN) / (ATMOS_MAX - ATMOS_MIN), 0.0f, 1.0f);
 	//Handle movement
 	if (forceVisualUpdate || oldPos != worldPos) {
 		p->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);
@@ -203,17 +255,6 @@ void Game::update(double dt) {
 		//}
 		//*/
 		forceVisualUpdate = false;
-	}
-	if (dialState > 0 && dialState < 9) {
-		dialTime += dt;
-		if (dialTime > DIAL_TIME) {
-			dialTime -= DIAL_TIME;
-			dialState++;
-			gateLights[dialState - 2]->colour = glm::vec3(0.0f, 1.0f, 0.0f);
-			if (dialState == 9) {
-				portal->setParent(transformedSpace);
-			}
-		}
 	}
 }
 
@@ -231,8 +272,47 @@ void Game::draw() {
 void Game::dialGate() {
 	if (dialState == 0) {
 		dialState = 1;
+		rotationProgress = 0.0f;
+		requiredGateRotation = glm::conjugate(glm::quat(glm::lookAt(gate->getGlobalPosition(),
+			player->getShip()->getGlobalPosition(),
+			glm::vec3(0.0f, 1.0f, 0.0f)))) * glm::quat(glm::vec3(-glm::half_pi<float>(), glm::pi<float>(), 0.0f));
+		requiredShipRotation = glm::conjugate(glm::quat(glm::lookAt(player->getShip()->getGlobalPosition(),
+			gate->getGlobalPosition(), glm::vec3(0.0f, 1.0f, 0.0f))));
+		startGateRotation = gate->getRotation();
+		startShipRotation = player->getShip()->getRotation();
 	}
 }
 
 void Game::enterGate() {
+	//Move player to correct location
+	float dif = glm::length(player->getShip()->getGlobalPosition() - gate->getGlobalPosition());
+	player->getShip()->setRotation(-portal->exitPortal->getRotation() * glm::vec3(0.0f, 0.0f, glm::half_pi<float>()));
+	worldPos = portal->exitPortal->getGlobalPosition() / lowLodScale - player->getShip()->getFront() * dif;
+	//Rotate gate
+	gate->setRotation(-portal->exitPortal->getRotation());
+	gate->setPosition(portal->exitPortal->getGlobalPosition() / lowLodScale);
+	//Clean up gate
+	SceneObject* null = NULL;
+	portal->portalSurface->setParent(null);
+	portal->exitPortal->setParent(null);
+	portal->setParent(null);
+	delete portal->portalSurface;
+	delete portal->exitPortal;
+	delete portal;
+	//Reset lights
+	for (int i = 0; i < 8; i++) {
+		//Turn off lights
+		gateLights[i]->colour = glm::vec3(1.0f, 0.0f, 0.0f);
+		//Move lights to act as if coming out of front of gate
+		glm::vec3 pos = gateLights[i]->getPosition();
+		pos.y *= -1;
+		gateLights[i]->setPosition(pos);
+	}
+	//Change scene
+	inFirstScene = false;
+	homeWorld->hide();
+	otherWorld->hide();
+	forceVisualUpdate = true;
+	scene->skyColour = glm::vec3(255.0f / 255.0f, 153.0f / 255.0f, 51.0f / 255.0f);
+	lowLodScene->skyColour = glm::vec3(255.0f / 255.0f, 153.0f / 255.0f, 51.0f / 255.0f);
 }

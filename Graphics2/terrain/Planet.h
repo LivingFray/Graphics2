@@ -16,6 +16,8 @@ public:
 	void generateTerrain(int octDepth);
 	//Updates the list of meshes that can be seen
 	void updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 pos, std::unordered_set<Mesh*> &highPoly);
+	//Hides the planet
+	void hide();
 
 	void setLODS(float lods[NUM_LOD]);
 
@@ -36,6 +38,8 @@ public:
 	void setSeaSpecular(GLuint tex) { seaSpec = tex; }
 	void setLandSpecular(GLuint tex) { landSpec = tex; }
 	void setRockSpecular(GLuint tex) { rockSpec = tex; }
+
+	glm::vec3 skyCol;
 
 private:
 	struct PlanetMeshes {

@@ -43,18 +43,31 @@ Player::Player() {
 	ship = new Model();
 	ship->loadModel("assets/ship/ship.obj");
 	cockpit = new Camera();
-	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -1.5f));
+	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -1.0f));
 	cockpit->setParent(ship);
 	cockpit->setNear(0.1f);
-	cockpit->setFar(12000.0f);
+	cockpit->setFar(4000.0f);
 	cockpit->clearOnDraw = false;
 	orbital = new Camera();
 	orbital->setPosition(glm::vec3(0.0f, 1.5f, 5.0f));
 	orbital->setRotation(glm::quat(glm::vec3(-glm::pi<float>() / 16.0f, 0.0f, 0.0f)));
 	orbital->setParent(ship);
 	orbital->setNear(0.1f);
-	orbital->setFar(12000.0f);
+	orbital->setFar(4000.0f);
 	orbital->clearOnDraw = false;
+	forceCockpit = false;
+	canMove = true;
+	canDialGate = false;
+	dialReady = new SpotLight();
+	dialReady->constant = 1.0f;
+	dialReady->linear = 0.35f;
+	dialReady->quadratic = 0.44f;
+	dialReady->direction = glm::normalize(glm::vec3(0.0f, -1.0f, -0.5f));
+	dialReady->setPosition(glm::vec3(0.0f, 1.0f, 0.0f));
+	dialReady->setParent(ship);
+	dialReady->cutOff = cosf(glm::two_pi<float>() / 32.0f);
+	dialReady->outerCutOff = cosf(glm::two_pi<float>() / 16.0f);
+	dialReady->colour = glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 
@@ -68,15 +81,24 @@ Player::~Player() {
 	if (orbital) {
 		delete orbital;
 	}
+	if (dialReady) {
+		delete dialReady;
+	}
 }
 
 void Player::update(double dt) {
+	if (forceCockpit) {
+		activeCam = CurrentCamera::COCKPIT;
+	}
 	if (activeCam == CurrentCamera::COCKPIT) {
 		moveCockpitCamera();
-	} else if (activeCam == CurrentCamera::ORBITAL) {
+	} else if (activeCam == CurrentCamera::ORBITAL && canMove) {
 		rotateShip();
 	}
-	moveShip(static_cast<float>(dt));
+	if (canMove) {
+		moveShip(static_cast<float>(dt));
+	}
+	dialReady->colour = canDialGate ? glm::vec3(0.0f, 0.0f, 1.0f) : glm::vec3(0.0f, 0.0f, 0.0f);
 }
 
 void Player::keyEvent(GLFWwindow* window, int key, int scancode, int action, int mods) {
@@ -101,8 +123,12 @@ void Player::keyEvent(GLFWwindow* window, int key, int scancode, int action, int
 			shipSpeed /= 100.0f;
 		}
 	}
-	if (key == GLFW_KEY_ENTER && action == GLFW_PRESS) {
+	//Only allow dialing if in cockpit mode for "cinematic reasons" (definitely not to hide rendering issues with portal)
+	if (key == GLFW_KEY_ENTER && action == GLFW_PRESS && canDialGate && canMove && activeCam == CurrentCamera::COCKPIT) {
 		game->dialGate();
+		canMove = false;
+		canDialGate = false;
+		forceCockpit = true;
 	}
 }
 
@@ -139,11 +165,11 @@ void Player::moveCockpitCamera() {
 	cockpitYaw += mx * MOUSE_SPEED;
 	cockpitPitch += my * MOUSE_SPEED;
 
-	if (cockpitYaw > glm::two_pi<double>()) {
-		cockpitYaw -= glm::two_pi<double>();
+	if (cockpitYaw > glm::half_pi<double>()) {
+		cockpitYaw = glm::half_pi<double>();
 	}
-	if (cockpitYaw < 0.0) {
-		cockpitYaw += glm::two_pi<double>();
+	if (cockpitYaw < -glm::half_pi<double>()) {
+		cockpitYaw = -glm::half_pi<double>();
 	}
 	if (cockpitPitch > glm::half_pi<double>()) {
 		cockpitPitch = glm::half_pi<double>();

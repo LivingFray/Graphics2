@@ -37,5 +37,10 @@ private:
 	PointLight* gateLights[8];
 	float dialTime;
 	int dialState;
+	glm::quat requiredGateRotation;
+	glm::quat requiredShipRotation;
+	glm::quat startGateRotation;
+	glm::quat startShipRotation;
+	float rotationProgress;
 };
 
