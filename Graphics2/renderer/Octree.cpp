@@ -161,14 +161,14 @@ bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, gl
 			//For simplicity compare this objects octree with the other objects triangle
 			for (std::vector<glm::vec3> tri : other->tris) {
 				//Convert triangle to correct coordinate system
-				std::vector<glm::vec3> transTri(3);
-				transTri[0] = glm::vec3(combTrans * glm::vec4(tri[0], 1.0f));
-				transTri[1] = glm::vec3(combTrans * glm::vec4(tri[1], 1.0f));
-				transTri[2] = glm::vec3(combTrans * glm::vec4(tri[2], 1.0f));
+				//std::vector<glm::vec3> transTri(3);
+				//transTri[0] = glm::vec3(combTrans * glm::vec4(tri[0], 1.0f));
+				//transTri[1] = glm::vec3(combTrans * glm::vec4(tri[1], 1.0f));
+				//transTri[2] = glm::vec3(combTrans * glm::vec4(tri[2], 1.0f));
 				//Check for collision
-				if (containsTriangle(transTri, minX, maxX, minY, maxY, minZ, maxZ)) {
+				//if (containsTriangle(transTri, minX, maxX, minY, maxY, minZ, maxZ)) {
 					return true;
-				}
+				//}
 			}
 			return false;
 		} else {
@@ -229,9 +229,9 @@ bool Octree::containsTriangle(std::vector<glm::vec3> &tri, float xMin, float xMa
 	}
 	//Check cross products
 	glm::vec3 triEdges[3] = {
-		tri[0] - tri[1],
-		tri[1] - tri[2],
-		tri[2] - tri[0]
+		tri[1] - tri[0],
+		tri[2] - tri[1],
+		tri[0] - tri[2]
 	};
 
 	float min2, max2;
@@ -274,16 +274,18 @@ bool Octree::overlaps(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans) {
 	for (glm::vec3 c : other->coords) {
 		otherCoords.push_back(glm::vec3(otherTrans * glm::vec4(c, 1.0f)));
 	}
+	glm::mat3 normTrans = glm::mat3(glm::transpose(glm::inverse(trans)));
+	glm::mat3 normOtherTrans = glm::mat3(glm::transpose(glm::inverse(otherTrans)));
 	for (int i = 0; i < 3; i++) {
 		float min, max, min2, max2;
-		glm::vec3 axis = glm::vec3(trans * norms[i]);
+		glm::vec3 axis = glm::vec3(normTrans * norms[i]);
 		project(thisCoords, axis, min, max);
 		project(otherCoords, axis, min2, max2);
 		//No overlap
 		if (max <= min2 || min >= max2) {
 			return false;
 		}
-		axis = glm::vec3(otherTrans * norms[i]);
+		axis = glm::vec3(normOtherTrans * norms[i]);
 		project(thisCoords, axis, min, max);
 		project(otherCoords, axis, min2, max2);
 		//No overlap

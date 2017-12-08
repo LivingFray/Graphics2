@@ -9,7 +9,7 @@
 #define ATMOS_MIN 2000.0f
 #define ATMOS_MAX 6000.0f
 
-#define OCTDEPTH 0
+#define OCTDEPTH 4
 
 #define DIAL_TIME 0.5f
 
@@ -190,6 +190,7 @@ void Game::keyEvent(GLFWwindow* window, int key, int scancode, int action, int m
 void Game::update(double dt) {
 	//TODO: Change strength of light depending on occlusion of planet
 	glm::vec3 oldPos = worldPos;
+	glm::quat oldRot = player->getShip()->getRotation();
 	player->update(dt);
 	if (dialState > 0 && dialState < 12) {
 		if (dialState == 1 && rotationProgress < 1.0f) {
@@ -243,18 +244,18 @@ void Game::update(double dt) {
 	//Handle movement
 	if (forceVisualUpdate || oldPos != worldPos) {
 		p->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);
-		//*
-		if (highPoly.size() > 0) {
-			std::cout << highPoly.size() << std::endl;
-		}
-		//for(Mesh* m: highPoly) {
-		//	if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
-		//		worldPos = oldPos;
-		//		break;
-		//	}
-		//}
-		//*/
 		forceVisualUpdate = false;
+		transformedSpace->setPosition(-worldPos);
+	}
+	if (oldPos != worldPos || oldRot != player->getShip()->getRotation()) {
+		for (Mesh* m : highPoly) {
+			if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
+				worldPos = oldPos;
+				transformedSpace->setPosition(-worldPos);
+				player->getShip()->setRotation(oldRot);
+				break;
+			}
+		}
 	}
 }
 
@@ -265,7 +266,6 @@ void Game::draw() {
 	lowLodCam->setLocalMatrix(cam->getGlobalMatrix());
 	lowLodCam->setPosition(worldPos * lowLodScale);
 	lowLodCam->render();
-	transformedSpace->setPosition(-worldPos);
 	cam->render();
 }
 
