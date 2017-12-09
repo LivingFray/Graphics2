@@ -111,8 +111,6 @@ void Camera::render(GLuint target) {
 	DirectionalLight* d = getScene()->getDirectionalLight();
 	//This needs changing for larger scenes
 	//Calculate directional light projection
-	float near_plane = 1.0f, far_plane = 200.0f;
-	float orthosize = 5.0f;
 	glm::mat4 lightProjection = glm::ortho(-orthosize, orthosize, -orthosize, orthosize, near_plane, far_plane);
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	if (d->direction.x == 0.0 && d->direction.z == 0.0) {

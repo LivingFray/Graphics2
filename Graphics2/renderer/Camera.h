@@ -44,6 +44,9 @@ public:
 	void render(GLuint target = 0);
 	// Initialises the shadow map
 	void initShadowMap();
+	// Shadow camera size
+	float near_plane = 1.0f, far_plane = 200.0f;
+	float orthosize = 5.0f;
 private:
 	GLfloat width;
 	GLfloat height;

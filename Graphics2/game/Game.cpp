@@ -35,7 +35,7 @@ void loadAssets(Game* game) {
 	std::cout << "Loading models..." << std::endl;
 	game->player = new Player();
 	game->player->setGame(game);
-	game->player->getShip()->createOctrees(1);
+	game->player->getShip()->createOctrees(0);
 	game->worldPos = glm::vec3(38000.0f, 0.0f, 0.0f);
 	//Portal
 	game->portal = new Portal();

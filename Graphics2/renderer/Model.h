@@ -26,6 +26,7 @@ public:
 	bool collides(Octree* other, glm::mat4 &otherTrans);
 	// Renders shadows of a model
 	void renderShadow(GLuint p);
+	std::vector<Mesh*> meshes;
 	//"Borrowed" from opengl-tutorials
 	static void indexVBO(
 		std::vector<glm::vec3> & in_vertices,
@@ -81,6 +82,5 @@ private:
 			return true;
 		}
 	}
-	std::vector<Mesh*> meshes;
 };
 

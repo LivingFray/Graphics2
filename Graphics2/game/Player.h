@@ -38,5 +38,8 @@ private:
 	bool boostSpeed = false;
 	CurrentCamera activeCam;
 	SpotLight* dialReady;
+	Mesh* gps;
+	Mesh* speedometer;
+	GLuint gpsImgs[4];
 };
 

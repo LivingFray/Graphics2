@@ -42,6 +42,26 @@
 Player::Player() {
 	ship = new Model();
 	ship->loadModel("assets/ship/ship.obj");
+	for (Mesh* m : ship->meshes) {
+		if (m->getName() == "GPS_Screen") {
+			gps = m;
+		} else if (m->getName() == "Speed_Screen") {
+			speedometer = m;
+		}
+	}
+	GLuint screenBacking = OpenGLSetup::loadImage("assets/ship/screen.png");
+	GLuint screenSpec = OpenGLSetup::loadImage("assets/ship/screenSpec.png");
+	gpsImgs[0] = OpenGLSetup::loadImage("assets/ship/screenGPSUp.png");
+	gpsImgs[1] = OpenGLSetup::loadImage("assets/ship/screenGPSDown.png");
+	gpsImgs[2] = OpenGLSetup::loadImage("assets/ship/screenGPSLeft.png");
+	gpsImgs[3] = OpenGLSetup::loadImage("assets/ship/screenGPSRight.png");
+	gps->setDiffuse(screenBacking);
+	speedometer->setDiffuse(screenBacking);
+	gps->setSpecular(screenSpec);
+	speedometer->setSpecular(screenSpec);
+	gps->useNormalTexture = false;
+	speedometer->useNormalTexture = false;
+	gps->setEmission(OpenGLSetup::loadImage("assets/ship/screenGPSUp.png"));
 	cockpit = new Camera();
 	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -1.0f));
 	cockpit->setParent(ship);
@@ -55,6 +75,7 @@ Player::Player() {
 	orbital->setNear(0.1f);
 	orbital->setFar(4000.0f);
 	orbital->clearOnDraw = false;
+	orbital->orthosize = 50.0f;
 	forceCockpit = false;
 	canMove = true;
 	canDialGate = false;
@@ -91,7 +112,36 @@ void Player::update(double dt) {
 		activeCam = CurrentCamera::COCKPIT;
 	}
 	if (activeCam == CurrentCamera::COCKPIT) {
-		moveCockpitCamera();
+		if (glfwGetMouseButton(OpenGLSetup::window, GLFW_MOUSE_BUTTON_2)) {
+			moveCockpitCamera();
+		} else if (canMove) {
+			cockpitYaw = 0.0f;
+			cockpitPitch = 0.0f;
+			cockpit->setRotation(glm::quat(glm::vec3(-cockpitPitch, -cockpitYaw, 0.0)));
+			rotateShip();
+		}
+		//Update GPS
+		//Convert gate to ship space
+		glm::vec3 gatePos = glm::vec3(ship->getGlobalMatrix() * glm::vec4(game->gate->getGlobalPosition(), 1.0f));
+		//Get angle in XZ plane
+		float xzAng = glm::dot(glm::vec3(1.0f, 0.0f, 0.0f), glm::normalize(glm::vec3(gatePos.x, 0.0f, gatePos.z)));
+		//Get angle in YZ plane
+		float yzAng = glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), glm::normalize(glm::vec3(0.0f, gatePos.y, gatePos.z)));
+		//Largest angle determines plane
+		//Sign of angle determines direction
+		if(abs(xzAng) > abs(yzAng)) {
+			if (xzAng > 0.0f) {
+				gps->setEmission(gpsImgs[2]);
+			} else {
+				gps->setEmission(gpsImgs[3]);
+			}
+		} else {
+			if (yzAng > 0.0f) {
+				gps->setEmission(gpsImgs[1]);
+			} else {
+				gps->setEmission(gpsImgs[0]);
+			}
+		}
 	} else if (activeCam == CurrentCamera::ORBITAL && canMove) {
 		rotateShip();
 	}

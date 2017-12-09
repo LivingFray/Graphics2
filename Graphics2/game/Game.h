@@ -21,6 +21,7 @@ public:
 	void enterGate();
 	glm::vec3 worldPos;
 	const float lowLodScale = 1.0f/1000.0f;
+	Model* gate;
 private:
 	Planet* homeWorld;
 	Planet* otherWorld;
@@ -32,7 +33,6 @@ private:
 	bool forceVisualUpdate;
 	std::unordered_set<Mesh*> highPoly;
 	bool inFirstScene;
-	Model* gate;
 	//Variables relating to gate dialing animation
 	PointLight* gateLights[8];
 	float dialTime;
