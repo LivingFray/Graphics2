@@ -9,17 +9,22 @@
 #define ATMOS_MIN 2000.0f
 #define ATMOS_MAX 6000.0f
 
-#define OCTDEPTH 4
+#define OCTDEPTH 0
 
 #define DIAL_TIME 0.5f
 
 #define DIAL_DISTANCE 50.0f
 
+#define COLLIDE_DISTANCE 10.0f
+
 #define DIAL_ROTATE 2.0f
 
 #define DIAL_STAGE_PORTAL 9
 #define DIAL_STAGE_MOVE 10
-#define DIAL_STAGE_STOP_MOVE 11
+#define DIAL_STAGE_MOVE_2 11
+#define DIAL_STAGE_STOP_MOVE 14
+
+#define WARNING_TIME 0.5f
 
 void loadAssets(Game* game) {
 	std::string folder(SKYBOX_FOLDER);
@@ -36,7 +41,7 @@ void loadAssets(Game* game) {
 	game->player = new Player();
 	game->player->setGame(game);
 	game->player->getShip()->createOctrees(0);
-	game->worldPos = glm::vec3(38000.0f, 0.0f, 0.0f);
+	game->worldPos = glm::vec3(38000.0f, 0.0f, 100.0f);
 	//Portal
 	game->portal = new Portal();
 	game->portal->initPortalMap();
@@ -192,7 +197,7 @@ void Game::update(double dt) {
 	glm::vec3 oldPos = worldPos;
 	glm::quat oldRot = player->getShip()->getRotation();
 	player->update(dt);
-	if (dialState > 0 && dialState < 12) {
+	if (dialState > 0 && dialState < DIAL_STAGE_STOP_MOVE) {
 		if (dialState == 1 && rotationProgress < 1.0f) {
 			rotationProgress += dt / DIAL_ROTATE;
 			rotationProgress = glm::min(1.0f, rotationProgress);
@@ -214,8 +219,8 @@ void Game::update(double dt) {
 					portal->setRotation(gate->getRotation());
 				}
 			}
-			if (dialState == 10) {
-				worldPos += player->getShip()->getFront() * player->slowSpeed * static_cast<float>(dt);
+			if (dialState == DIAL_STAGE_MOVE) {
+				worldPos += player->getShip()->getFront() * player->speeds[0] * static_cast<float>(dt);
 				//Check if camera has crossed threshold of portal
 				glm::vec3 front = player->getActiveCamera()->getGlobalPosition() + player->getShip()->getFront() * 0.5f;
 				front -= gate->getGlobalPosition();
@@ -226,18 +231,34 @@ void Game::update(double dt) {
 					dialTime = 0.0f;
 					enterGate();
 				}
-			}else if (dialState == 11) {
-				worldPos += player->getShip()->getFront() * player->slowSpeed * static_cast<float>(dt);
+			}else if (dialState >= DIAL_STAGE_MOVE_2 && dialState < DIAL_STAGE_STOP_MOVE) {
+				worldPos += player->getShip()->getFront() * player->speeds[0] * static_cast<float>(dt);
 			}
-			if (dialState == 12) {
+			if (dialState == DIAL_STAGE_STOP_MOVE) {
 				//Restore control of ship
 				player->canMove = true;
 				player->forceCockpit = false;
 			}
 		}
 	} else if(dialState == 0) {
-		glm::vec3 p = gate->getGlobalPosition();
-		player->canDialGate = glm::dot(p, p) < DIAL_DISTANCE * DIAL_DISTANCE;
+		glm::vec3 p = gate->getGlobalPosition() - worldPos + oldPos;
+		float dist = glm::dot(p, p);
+		player->canDialGate = dist < DIAL_DISTANCE * DIAL_DISTANCE;
+		//Prevent collisions with gate
+		if (dist < COLLIDE_DISTANCE * COLLIDE_DISTANCE) {
+			player->collideWarning = WARNING_TIME;
+			worldPos = oldPos;
+			player->getShip()->setRotation(oldRot);
+		}
+	}
+	if (!inFirstScene && dialState == DIAL_STAGE_STOP_MOVE) {
+		glm::vec3 p = gate->getGlobalPosition() - worldPos + oldPos;
+		float dist = glm::dot(p, p);
+		if (dist < COLLIDE_DISTANCE * COLLIDE_DISTANCE) {
+			player->collideWarning = WARNING_TIME;
+			worldPos = oldPos;
+			player->getShip()->setRotation(oldRot);
+		}
 	}
 	Planet* p = inFirstScene ? homeWorld : otherWorld;
 	lowLodScene->skyAmount = 1.0f - glm::clamp((glm::length(worldPos) - p->planetScale - ATMOS_MIN) / (ATMOS_MAX - ATMOS_MIN), 0.0f, 1.0f);
@@ -253,6 +274,7 @@ void Game::update(double dt) {
 				worldPos = oldPos;
 				transformedSpace->setPosition(-worldPos);
 				player->getShip()->setRotation(oldRot);
+				player->collideWarning = WARNING_TIME;
 				break;
 			}
 		}

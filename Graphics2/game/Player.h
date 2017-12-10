@@ -21,9 +21,9 @@ public:
 	bool canMove;
 	bool forceCockpit;
 	bool canDialGate;
-	const float slowSpeed = 10.0f;
-	const float midSpeed = 100.0f;
-	const float fastSpeed = 1000.0f;
+	bool gateDialed;
+	const float speeds[5] = {10.0f, 20.0f, 50.0f, 100.0f, 1000.0f};
+	float collideWarning = 0.0f;
 private:
 	void moveCockpitCamera();
 	void rotateShip();
@@ -40,6 +40,9 @@ private:
 	SpotLight* dialReady;
 	Mesh* gps;
 	Mesh* speedometer;
+	Mesh* prox;
+	GLuint speedImgs[6];
 	GLuint gpsImgs[4];
+	GLuint proxImgs[6];
 };
 

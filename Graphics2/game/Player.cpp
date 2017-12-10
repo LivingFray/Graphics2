@@ -1,6 +1,8 @@
 #include "Player.h"
 #include "Game.h"
 
+#include <iostream>
+
 //Control scheme to use (SUPERIOR_CONTROLS - Left handed IJKL, GAMER_CONTROLS - WASD, Anything else - Arrow keys)
 #define SUPERIOR_CONTROLS
 
@@ -47,23 +49,41 @@ Player::Player() {
 			gps = m;
 		} else if (m->getName() == "Speed_Screen") {
 			speedometer = m;
+		} else if (m->getName() == "Gate_Prox_Screen") {
+			prox = m;
 		}
 	}
 	GLuint screenBacking = OpenGLSetup::loadImage("assets/ship/screen.png");
+	GLuint wideScreenBacking = OpenGLSetup::loadImage("assets/ship/wideScreen.png");
 	GLuint screenSpec = OpenGLSetup::loadImage("assets/ship/screenSpec.png");
-	gpsImgs[0] = OpenGLSetup::loadImage("assets/ship/screenGPSUp.png");
-	gpsImgs[1] = OpenGLSetup::loadImage("assets/ship/screenGPSDown.png");
-	gpsImgs[2] = OpenGLSetup::loadImage("assets/ship/screenGPSLeft.png");
-	gpsImgs[3] = OpenGLSetup::loadImage("assets/ship/screenGPSRight.png");
+	GLuint wideScreenSpec = OpenGLSetup::loadImage("assets/ship/wideScreenSpec.png");
+	gpsImgs[0] = OpenGLSetup::loadImage("assets/ship/screenGPSDown.png");
+	gpsImgs[1] = OpenGLSetup::loadImage("assets/ship/screenGPSUp.png");
+	gpsImgs[2] = OpenGLSetup::loadImage("assets/ship/screenGPSRight.png");
+	gpsImgs[3] = OpenGLSetup::loadImage("assets/ship/screenGPSLeft.png");
+	proxImgs[0] = OpenGLSetup::loadImage("assets/ship/screenGateCollision.png");
+	proxImgs[1] = OpenGLSetup::loadImage("assets/ship/screenGateNoCollision.png");
+	proxImgs[2] = OpenGLSetup::loadImage("assets/ship/screenNoGateCollision.png");
+	proxImgs[3] = OpenGLSetup::loadImage("assets/ship/screenNoGateNoCollision.png");
+	proxImgs[4] = OpenGLSetup::loadImage("assets/ship/screenDialGateCollision.png");
+	proxImgs[5] = OpenGLSetup::loadImage("assets/ship/screenDialGateNoCollision.png");
+	speedImgs[0] = OpenGLSetup::loadImage("assets/ship/screenSpeedStopped.png");
+	speedImgs[1] = OpenGLSetup::loadImage("assets/ship/screenSpeed1.png");
+	speedImgs[2] = OpenGLSetup::loadImage("assets/ship/screenSpeed2.png");
+	speedImgs[3] = OpenGLSetup::loadImage("assets/ship/screenSpeed3.png");
+	speedImgs[4] = OpenGLSetup::loadImage("assets/ship/screenSpeed4.png");
+	speedImgs[5] = OpenGLSetup::loadImage("assets/ship/screenSpeed5.png");
+	prox->setDiffuse(wideScreenBacking);
 	gps->setDiffuse(screenBacking);
 	speedometer->setDiffuse(screenBacking);
 	gps->setSpecular(screenSpec);
 	speedometer->setSpecular(screenSpec);
 	gps->useNormalTexture = false;
 	speedometer->useNormalTexture = false;
+	prox->useNormalTexture = false;
 	gps->setEmission(OpenGLSetup::loadImage("assets/ship/screenGPSUp.png"));
 	cockpit = new Camera();
-	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -1.0f));
+	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -0.9f));
 	cockpit->setParent(ship);
 	cockpit->setNear(0.1f);
 	cockpit->setFar(4000.0f);
@@ -89,6 +109,10 @@ Player::Player() {
 	dialReady->cutOff = cosf(glm::two_pi<float>() / 32.0f);
 	dialReady->outerCutOff = cosf(glm::two_pi<float>() / 16.0f);
 	dialReady->colour = glm::vec3(0.0f, 0.0f, 0.0f);
+	cockpitPitch = -0.25f;
+	cockpitYaw = 0.0f;
+	cockpit->setRotation(glm::quat(glm::vec3(-cockpitPitch, -cockpitYaw, 0.0)));
+	gateDialed = false;
 }
 
 
@@ -116,19 +140,20 @@ void Player::update(double dt) {
 			moveCockpitCamera();
 		} else if (canMove) {
 			cockpitYaw = 0.0f;
-			cockpitPitch = 0.0f;
+			cockpitPitch = -0.25f;
 			cockpit->setRotation(glm::quat(glm::vec3(-cockpitPitch, -cockpitYaw, 0.0)));
 			rotateShip();
 		}
 		//Update GPS
 		//Convert gate to ship space
-		glm::vec3 gatePos = glm::vec3(ship->getGlobalMatrix() * glm::vec4(game->gate->getGlobalPosition(), 1.0f));
+		glm::vec3 gatePos = glm::vec3(glm::inverse(ship->getGlobalMatrix()) * glm::vec4(game->gate->getGlobalPosition(), 1.0f));
 		//Get angle in XZ plane
 		float xzAng = glm::dot(glm::vec3(1.0f, 0.0f, 0.0f), glm::normalize(glm::vec3(gatePos.x, 0.0f, gatePos.z)));
 		//Get angle in YZ plane
 		float yzAng = glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), glm::normalize(glm::vec3(0.0f, gatePos.y, gatePos.z)));
 		//Largest angle determines plane
 		//Sign of angle determines direction
+		std::cout << gatePos.x << ", " << gatePos.y << ", " << gatePos.z << std::endl;
 		if(abs(xzAng) > abs(yzAng)) {
 			if (xzAng > 0.0f) {
 				gps->setEmission(gpsImgs[2]);
@@ -140,6 +165,25 @@ void Player::update(double dt) {
 				gps->setEmission(gpsImgs[1]);
 			} else {
 				gps->setEmission(gpsImgs[0]);
+			}
+		}
+		//Update Proximity warning/gate dial
+		if (collideWarning > 0.0f) {
+			collideWarning -= dt;
+			if (canDialGate) {
+				prox->setEmission(proxImgs[0]);
+			} else if (gateDialed) {
+				prox->setEmission(proxImgs[4]);
+			} else {
+				prox->setEmission(proxImgs[2]);
+			}
+		} else {
+			if (canDialGate) {
+				prox->setEmission(proxImgs[1]);
+			} else if (gateDialed) {
+				prox->setEmission(proxImgs[5]);
+			} else {
+				prox->setEmission(proxImgs[3]);
 			}
 		}
 	} else if (activeCam == CurrentCamera::ORBITAL && canMove) {
@@ -179,6 +223,7 @@ void Player::keyEvent(GLFWwindow* window, int key, int scancode, int action, int
 		canMove = false;
 		canDialGate = false;
 		forceCockpit = true;
+		gateDialed = true;
 	}
 }
 
@@ -245,10 +290,6 @@ void Player::rotateShip() {
 }
 
 void Player::moveShip(float dt) {
-	//Prevent Floating point errors by moving the world around the ship
-	//"The engines don't move the ship at all.
-	//The ship stays where it is and the engines move the universe around it"
-	//~C. Farnsworth, Futurama
 	glm::vec3 front = ship->getFront();
 	glm::vec3 right = ship->getRight();
 	if (glfwGetKey(OpenGLSetup::window, MOVE_FORWARD)) {

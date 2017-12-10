@@ -116,7 +116,7 @@ void Camera::render(GLuint target) {
 	if (d->direction.x == 0.0 && d->direction.z == 0.0) {
 		up = glm::vec3(1.0f, 0.0f, 0.0f);
 	}
-	glm::mat4 lightView = glm::lookAt(d->direction * -100.0f,
+	glm::mat4 lightView = glm::lookAt(d->direction * (far_plane - near_plane) * 0.5f,
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		up);
 	glm::mat4 LSM = lightProjection * lightView;
