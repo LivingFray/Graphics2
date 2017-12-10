@@ -269,6 +269,14 @@ void Game::update(double dt) {
 		transformedSpace->setPosition(-worldPos);
 	}
 	if (oldPos != worldPos || oldRot != player->getShip()->getRotation()) {
+		float h = glm::dot(worldPos, worldPos);
+		if (h < (ATMOS_MIN + p->planetScale) * (ATMOS_MIN + p->planetScale)) {
+			player->setMaxSpeed(1);
+		} else if (h < (ATMOS_MAX + p->planetScale) * (ATMOS_MAX + p->planetScale)) {
+			player->setMaxSpeed(2);
+		} else {
+			player->setMaxSpeed(4);
+		}
 		for (Mesh* m : highPoly) {
 			if (player->getShip()->collides(m->collisionTree, m->getGlobalMatrix())) {
 				worldPos = oldPos;

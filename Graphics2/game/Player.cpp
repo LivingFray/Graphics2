@@ -17,6 +17,8 @@
 #define MOVE_RIGHT GLFW_KEY_L
 #define ROLL_LEFT GLFW_KEY_U
 #define ROLL_RIGHT GLFW_KEY_O
+#define INC_SPEED GLFW_KEY_RIGHT_SHIFT
+#define DEC_SPEED GLFW_KEY_RIGHT_CONTROL
 
 #else
 
@@ -28,6 +30,8 @@
 #define MOVE_RIGHT GLFW_KEY_D
 #define ROLL_LEFT GLFW_KEY_Q
 #define ROLL_RIGHT GLFW_KEY_E
+#define INC_SPEED GLFW_KEY_LEFT_SHIFT
+#define DEC_SPEED GLFW_KEY_LEFT_CONTROL
 
 #else
 
@@ -37,6 +41,8 @@
 #define MOVE_RIGHT GLFW_KEY_RIGHT
 #define ROLL_LEFT GLFW_KEY_RIGHT_CONTROL
 #define ROLL_RIGHT GLFW_KEY_RIGHT_SHIFT
+#define INC_SPEED GLFW_KEY_LEFT_SHIFT
+#define DEC_SPEED GLFW_KEY_LEFT_CONTROL
 
 #endif
 #endif
@@ -67,12 +73,11 @@ Player::Player() {
 	proxImgs[3] = OpenGLSetup::loadImage("assets/ship/screenNoGateNoCollision.png");
 	proxImgs[4] = OpenGLSetup::loadImage("assets/ship/screenDialGateCollision.png");
 	proxImgs[5] = OpenGLSetup::loadImage("assets/ship/screenDialGateNoCollision.png");
-	speedImgs[0] = OpenGLSetup::loadImage("assets/ship/screenSpeedStopped.png");
-	speedImgs[1] = OpenGLSetup::loadImage("assets/ship/screenSpeed1.png");
-	speedImgs[2] = OpenGLSetup::loadImage("assets/ship/screenSpeed2.png");
-	speedImgs[3] = OpenGLSetup::loadImage("assets/ship/screenSpeed3.png");
-	speedImgs[4] = OpenGLSetup::loadImage("assets/ship/screenSpeed4.png");
-	speedImgs[5] = OpenGLSetup::loadImage("assets/ship/screenSpeed5.png");
+	speedImgs[0] = OpenGLSetup::loadImage("assets/ship/screenSpeed1.png");
+	speedImgs[1] = OpenGLSetup::loadImage("assets/ship/screenSpeed2.png");
+	speedImgs[2] = OpenGLSetup::loadImage("assets/ship/screenSpeed3.png");
+	speedImgs[3] = OpenGLSetup::loadImage("assets/ship/screenSpeed4.png");
+	speedImgs[4] = OpenGLSetup::loadImage("assets/ship/screenSpeed5.png");
 	prox->setDiffuse(wideScreenBacking);
 	gps->setDiffuse(screenBacking);
 	speedometer->setDiffuse(screenBacking);
@@ -81,7 +86,8 @@ Player::Player() {
 	gps->useNormalTexture = false;
 	speedometer->useNormalTexture = false;
 	prox->useNormalTexture = false;
-	gps->setEmission(OpenGLSetup::loadImage("assets/ship/screenGPSUp.png"));
+	gps->setEmission(gpsImgs[0]);
+	speedometer->setEmission(speedImgs[0]);
 	cockpit = new Camera();
 	cockpit->setPosition(glm::vec3(0.0f, 0.0f, -0.9f));
 	cockpit->setParent(ship);
@@ -153,7 +159,6 @@ void Player::update(double dt) {
 		float yzAng = glm::dot(glm::vec3(0.0f, 1.0f, 0.0f), glm::normalize(glm::vec3(0.0f, gatePos.y, gatePos.z)));
 		//Largest angle determines plane
 		//Sign of angle determines direction
-		std::cout << gatePos.x << ", " << gatePos.y << ", " << gatePos.z << std::endl;
 		if(abs(xzAng) > abs(yzAng)) {
 			if (xzAng > 0.0f) {
 				gps->setEmission(gpsImgs[2]);
@@ -209,14 +214,6 @@ void Player::keyEvent(GLFWwindow* window, int key, int scancode, int action, int
 			break;
 		}
 	}
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
-		boostSpeed = !boostSpeed;
-		if (boostSpeed) {
-			shipSpeed *= 100.0f;
-		} else {
-			shipSpeed /= 100.0f;
-		}
-	}
 	//Only allow dialing if in cockpit mode for "cinematic reasons" (definitely not to hide rendering issues with portal)
 	if (key == GLFW_KEY_ENTER && action == GLFW_PRESS && canDialGate && canMove && activeCam == CurrentCamera::COCKPIT) {
 		game->dialGate();
@@ -225,12 +222,23 @@ void Player::keyEvent(GLFWwindow* window, int key, int scancode, int action, int
 		forceCockpit = true;
 		gateDialed = true;
 	}
+	if (key == INC_SPEED && action == GLFW_PRESS && speed < maxSpeed) {
+		speed++;
+		speedometer->setEmission(speedImgs[speed]);
+		shipSpeed = speeds[speed];
+	}
+	if (key == DEC_SPEED && action == GLFW_PRESS && speed > 0) {
+		speed--;
+		speedometer->setEmission(speedImgs[speed]);
+		shipSpeed = speeds[speed];
+	}
 }
 
 void Player::setGame(Game* g) {
 	game = g;
 	if (game) {
 		ship->setParent(game->scene);
+		shipSpeed = speeds[speed];
 	}
 }
 
@@ -242,6 +250,14 @@ Camera* Player::getActiveCamera() {
 		return orbital;
 	default:
 		return NULL;
+	}
+}
+
+void Player::setMaxSpeed(int speed) {
+	maxSpeed = speed;
+	if (this->speed > maxSpeed) {
+		this->speed = maxSpeed;
+		speedometer->setEmission(speedImgs[maxSpeed]);
 	}
 }
 

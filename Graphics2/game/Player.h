@@ -18,6 +18,7 @@ public:
 		return ship;
 	};
 	Camera* getActiveCamera();
+	void setMaxSpeed(int speed);
 	bool canMove;
 	bool forceCockpit;
 	bool canDialGate;
@@ -35,14 +36,15 @@ private:
 	float cockpitYaw = 0.0f;
 	float cockpitPitch = 0.0f;
 	float shipSpeed = 10.0f;
-	bool boostSpeed = false;
 	CurrentCamera activeCam;
 	SpotLight* dialReady;
 	Mesh* gps;
 	Mesh* speedometer;
 	Mesh* prox;
-	GLuint speedImgs[6];
+	GLuint speedImgs[5];
 	GLuint gpsImgs[4];
 	GLuint proxImgs[6];
+	int maxSpeed = 2;
+	int speed = 0;
 };
 
