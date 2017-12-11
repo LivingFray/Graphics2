@@ -136,7 +136,7 @@ void Octree::divide(std::vector<unsigned short> &indices, std::vector<glm::vec3>
 //	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 }
 
-bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, glm::mat4 &invOtherTrans) {
+bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, glm::mat4 &invTrans) {
 	/* TRANSLATED PSEUDOCODE FROM LECTURES (so don't blame me if its wrong)
 	If NOT overlap(this, other) return false
 	else if leaf(this)
@@ -157,30 +157,30 @@ bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, gl
 	}
 	if (children.size() == 0) {
 		if (other->children.size() == 0) {
-			glm::mat4 combTrans = trans * invOtherTrans;
+			glm::mat4 combTrans = invTrans * otherTrans;
 			//For simplicity compare this objects octree with the other objects triangle
 			for (std::vector<glm::vec3> tri : other->tris) {
 				//Convert triangle to correct coordinate system
-				//std::vector<glm::vec3> transTri(3);
-				//transTri[0] = glm::vec3(combTrans * glm::vec4(tri[0], 1.0f));
-				//transTri[1] = glm::vec3(combTrans * glm::vec4(tri[1], 1.0f));
-				//transTri[2] = glm::vec3(combTrans * glm::vec4(tri[2], 1.0f));
+				std::vector<glm::vec3> transTri(3);
+				transTri[0] = glm::vec3(combTrans * glm::vec4(tri[0], 1.0f));
+				transTri[1] = glm::vec3(combTrans * glm::vec4(tri[1], 1.0f));
+				transTri[2] = glm::vec3(combTrans * glm::vec4(tri[2], 1.0f));
 				//Check for collision
-				//if (containsTriangle(transTri, minX, maxX, minY, maxY, minZ, maxZ)) {
+				if(containsTriangle(transTri, minX, maxX, minY, maxY, minZ, maxZ)) {
 					return true;
-				//}
+				}
 			}
 			return false;
 		} else {
 			for (Octree* o : other->children) {
-				if (this->collides(o, trans, otherTrans, invOtherTrans)) {
+				if (this->collides(o, trans, otherTrans, invTrans)) {
 					return true;
 				}
 			}
 		}
 	} else {
 		for (Octree* o : this->children) {
-			if (o->collides(other, trans, otherTrans, invOtherTrans)) {
+			if (o->collides(other, trans, otherTrans, invTrans)) {
 				return true;
 			}
 		}

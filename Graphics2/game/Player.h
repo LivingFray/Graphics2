@@ -23,7 +23,7 @@ public:
 	bool forceCockpit;
 	bool canDialGate;
 	bool gateDialed;
-	const float speeds[5] = {10.0f, 20.0f, 50.0f, 100.0f, 1000.0f};
+	const float speeds[5] = {15.0f, 30.0f, 50.0f, 100.0f, 1000.0f};
 	float collideWarning = 0.0f;
 private:
 	void moveCockpitCamera();

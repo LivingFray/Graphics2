@@ -42,7 +42,7 @@ public:
 	// Creates an octree for the mesh
 	void createOctree(int depth);
 	// Checks if the octree collides with anything
-	bool collides(Octree* other, glm::mat4 &otherTrans, glm::mat4 &invTrans);
+	bool collides(Octree* other, glm::mat4 &otherTrans);
 	bool useNormalTexture;
 	Octree* collisionTree;
 private:

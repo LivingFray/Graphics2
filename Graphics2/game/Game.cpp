@@ -9,7 +9,7 @@
 #define ATMOS_MIN 2000.0f
 #define ATMOS_MAX 6000.0f
 
-#define OCTDEPTH 0
+#define OCTDEPTH 2
 
 #define DIAL_TIME 0.5f
 

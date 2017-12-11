@@ -16,7 +16,7 @@ public:
 	~Octree();
 	void create(std::vector<unsigned short> &indices, std::vector<glm::vec3> &points, int maxDepth);
 	void divide(std::vector<unsigned short> &indices, std::vector<glm::vec3> &points, float minX, float maxX, float minY, float maxY, float minZ, float maxZ, int depth);
-	bool collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, glm::mat4 &invOtherTrans);
+	bool collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, glm::mat4 &invTrans);
 	//Debug drawing
 //	void draw(glm::mat4 &trans, Camera* cam);
 private:
