@@ -45,8 +45,10 @@ public:
 	// Initialises the shadow map
 	void initShadowMap();
 	// Shadow camera size
-	float near_plane = 1.0f, far_plane = 2000.0f;
+	float near_plane = 1.0f, far_plane = 200.0f;
 	float orthosize = 5.0f;
+	// Recalculates the shawow projection
+	void recalcShadowProj();
 private:
 	GLfloat width;
 	GLfloat height;
@@ -58,7 +60,7 @@ private:
 	bool updateFlag;
 	GLuint depthMap;
 	Shader shadow;
-	//TODO: In-game adjusting
 	unsigned int shadowMapSize = 2048;
 	GLuint fbo;
+	glm::mat4 lightProjection;
 };

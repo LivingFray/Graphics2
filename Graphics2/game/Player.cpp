@@ -102,6 +102,7 @@ Player::Player() {
 	orbital->setFar(4000.0f);
 	orbital->clearOnDraw = false;
 	orbital->orthosize = 50.0f;
+	orbital->recalcShadowProj();
 	forceCockpit = false;
 	canMove = true;
 	canDialGate = false;

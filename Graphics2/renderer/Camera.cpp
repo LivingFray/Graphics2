@@ -50,6 +50,11 @@ void Camera::initShadowMap() {
 	glDrawBuffer(GL_NONE);
 	glReadBuffer(GL_NONE);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	recalcShadowProj();
+}
+
+void Camera::recalcShadowProj() {
+	lightProjection = glm::ortho(-orthosize, orthosize, -orthosize, orthosize, near_plane, far_plane);
 }
 
 void Camera::setFOV(GLfloat fov) {
@@ -111,12 +116,11 @@ void Camera::render(GLuint target) {
 	DirectionalLight* d = getScene()->getDirectionalLight();
 	//This needs changing for larger scenes
 	//Calculate directional light projection
-	glm::mat4 lightProjection = glm::ortho(-orthosize, orthosize, -orthosize, orthosize, near_plane, far_plane);
 	glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 	if (d->direction.x == 0.0 && d->direction.z == 0.0) {
 		up = glm::vec3(1.0f, 0.0f, 0.0f);
 	}
-	glm::mat4 lightView = glm::lookAt(d->direction * (far_plane - near_plane) * 0.5f,
+	glm::mat4 lightView = glm::lookAt(d->direction * (far_plane - near_plane) * -0.5f,
 		glm::vec3(0.0f, 0.0f, 0.0f),
 		up);
 	glm::mat4 LSM = lightProjection * lightView;

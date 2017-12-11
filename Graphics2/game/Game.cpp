@@ -9,7 +9,7 @@
 #define ATMOS_MIN 2000.0f
 #define ATMOS_MAX 6000.0f
 
-#define OCTDEPTH 2
+#define OCTDEPTH 4
 
 #define DIAL_TIME 0.5f
 
@@ -41,7 +41,7 @@ void loadAssets(Game* game) {
 	game->player = new Player();
 	game->player->setGame(game);
 	game->player->getShip()->createOctrees(0);
-	game->worldPos = glm::vec3(38000.0f, 0.0f, 100.0f);
+	game->worldPos = glm::vec3(40000.0f, 0.0f, 100.0f);
 	//Portal
 	game->portal = new Portal();
 	game->portal->initPortalMap();
@@ -49,10 +49,10 @@ void loadAssets(Game* game) {
 	game->portal->portalSurface = new Model();
 	game->portal->portalSurface->loadModel("assets/portal/portal.obj");
 	game->portal->setRotation(glm::quat(glm::vec3(-glm::half_pi<float>(), 0.0f, 0.0f)));
-	game->portal->setPosition(glm::vec3(38000.0f, 0.0f, -10.0f));
+	game->portal->setPosition(glm::vec3(40000.0f, 0.0f, -10.0f));
 	game->portal->exitPortal = new SceneObject();
 	game->portal->exitPortal->setParent(game->secondLowLodScene);
-	game->portal->exitPortal->setPosition(glm::vec3(game->lowLodScale * 38000.0f, 0.0f, 0.0f));
+	game->portal->exitPortal->setPosition(glm::vec3(game->lowLodScale * 40000.0f, 0.0f, 0.0f));
 	game->portal->exitPortal->setRotation(glm::quat(glm::vec3(-glm::half_pi<float>(), glm::half_pi<float>(), 0.0f)));
 	game->portal->renderView = new Camera();
 	game->portal->renderView->setParent(game->portal->exitPortal);
@@ -62,7 +62,7 @@ void loadAssets(Game* game) {
 	game->gate = new Model();
 	game->gate->loadModel("assets/portal/gate.obj");
 	game->gate->setParent(game->transformedSpace);
-	game->gate->setPosition(glm::vec3(38000.0f, 0.0f, -10.0f));
+	game->gate->setPosition(glm::vec3(40000.0f, 0.0f, -10.0f));
 	game->gate->setRotation(glm::quat(glm::vec3(-glm::half_pi<float>(), 0.0f, 0.0f)));
 	std::cout << "All assets loaded" << std::endl;
 
@@ -74,7 +74,7 @@ void generateTerrain(Game* game) {
 	game->homeWorld = new Planet();
 	game->homeWorld->planetScale = 30000.0f;
 	game->homeWorld->lowLodScale = game->lowLodScale;
-	float lod[] = { 2000.0f, 4000.0f, 8000.0f, 16000.0f };
+	float lod[] = { 2000.0f, 4000.0f, 8000.0f};
 	game->homeWorld->setLODS(lod);
 	game->homeWorld->lowLodHeight = 500.0f;
 	//Make world look gaian
@@ -89,7 +89,7 @@ void generateTerrain(Game* game) {
 	game->otherWorld = new Planet();
 	game->otherWorld->planetScale = 15000.0f;
 	game->otherWorld->lowLodScale = game->lowLodScale;
-	float lod2[] = { 2000.0f, 4000.0f, 8000.0f, 16000.0f };
+	float lod2[] = { 2000.0f, 4000.0f, 8000.0f};
 	game->otherWorld->setLODS(lod2);
 	//Make world look martian
 	game->otherWorld->setLandTexture(OpenGLSetup::loadImage("assets/terrain/marsRock.png"));
@@ -211,7 +211,7 @@ void Game::update(double dt) {
 				if (dialState != DIAL_STAGE_MOVE) {
 					dialState++;
 				}
-				if (dialState < 10) {
+				if (dialState < DIAL_STAGE_MOVE) {
 					gateLights[dialState - 2]->colour = glm::vec3(0.0f, 1.0f, 0.0f);
 				}
 				if (dialState == DIAL_STAGE_PORTAL && old != DIAL_STAGE_PORTAL) {

@@ -6,8 +6,8 @@
 #include <thread>
 
 //Graphical settings (LOD)
-#define NUM_LOD 4
-#define MAX_VERTS (1 << 3)
+#define NUM_LOD 3
+#define MAX_VERTS (1 << 5)
 
 class Planet {
 public:
@@ -48,7 +48,7 @@ private:
 		Mesh* rock;
 	};
 	//Maximum distance at which that LOD is used
-	float LOD_Distances[NUM_LOD] = { 0.1f, 0.5f, 1.0f, 1.5f };
+	float LOD_Distances[NUM_LOD] = { 0.1f, 0.5f, 1.0f };
 	//The number of grids in each direction of each face
 	int numGrids;
 
