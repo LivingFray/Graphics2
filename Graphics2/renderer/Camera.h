@@ -46,7 +46,7 @@ public:
 	void initShadowMap();
 	// Shadow camera size
 	float near_plane = 1.0f, far_plane = 51.0f;
-	float orthosize = 5.0f;
+	float orthosize = 7.0f;
 	// Recalculates the shawow projection
 	void recalcShadowProj();
 private:
