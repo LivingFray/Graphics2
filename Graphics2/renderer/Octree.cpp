@@ -161,14 +161,14 @@ bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, gl
 			//For simplicity compare this objects octree with the other objects triangle
 			for (std::vector<glm::vec3> tri : other->tris) {
 				//Convert triangle to correct coordinate system
-				std::vector<glm::vec3> transTri(3);
-				transTri[0] = glm::vec3(combTrans * glm::vec4(tri[0], 1.0f));
-				transTri[1] = glm::vec3(combTrans * glm::vec4(tri[1], 1.0f));
-				transTri[2] = glm::vec3(combTrans * glm::vec4(tri[2], 1.0f));
-				//Check for collision
-				if(containsTriangle(transTri, minX, maxX, minY, maxY, minZ, maxZ)) {
+				//std::vector<glm::vec3> transTri(3);
+				//transTri[0] = glm::vec3(combTrans * glm::vec4(tri[0], 1.0f));
+				//transTri[1] = glm::vec3(combTrans * glm::vec4(tri[1], 1.0f));
+				//transTri[2] = glm::vec3(combTrans * glm::vec4(tri[2], 1.0f));
+				////Check for collision
+				//if(containsTriangle(transTri, minX, maxX, minY, maxY, minZ, maxZ)) {
 					return true;
-				}
+				//}
 			}
 			return false;
 		} else {

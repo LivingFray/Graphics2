@@ -41,7 +41,7 @@ void loadAssets(Game* game) {
 	game->player = new Player();
 	game->player->setGame(game);
 	game->player->getShip()->createOctrees(0);
-	game->worldPos = glm::vec3(40000.0f, 0.0f, 100.0f);
+	game->worldPos = glm::vec3(32000.0f, 0.0f, 0.0f);
 	//Portal
 	game->portal = new Portal();
 	game->portal->initPortalMap();
@@ -262,6 +262,7 @@ void Game::update(double dt) {
 	}
 	Planet* p = inFirstScene ? homeWorld : otherWorld;
 	lowLodScene->skyAmount = 1.0f - glm::clamp((glm::length(worldPos) - p->planetScale - ATMOS_MIN) / (ATMOS_MAX - ATMOS_MIN), 0.0f, 1.0f);
+	lowLodScene->skyAmount *= glm::clamp(glm::dot(glm::normalize(worldPos), glm::vec3(0.0f, 1.0f, 0.0f)) + 0.9f, 0.0f, 1.0f);
 	//Handle movement
 	if (forceVisualUpdate || oldPos != worldPos) {
 		p->updateVisible(transformedSpace, lowLodScene, worldPos, highPoly);

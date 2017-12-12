@@ -156,11 +156,12 @@ void Planet::updateVisible(SceneObject* highLod, SceneObject* lowLod, glm::vec3 
 	int gridX = glm::clamp(static_cast<int>(floor((numGrids - 1) * (xTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
 	int gridY = glm::clamp(static_cast<int>(floor((numGrids - 1) * (yTrans + 1.0f) / 2.0f)), 0, numGrids - 1);
 	float height = glm::dot(pos, pos);
-	int lod = NUM_LOD - 1;
-	while (lod > 1 && height < LOD_Distances[lod]) { lod--; }
+	int startLod = NUM_LOD - 1;
+	while (startLod > 1 && height < LOD_Distances[startLod]) { startLod--; }
 	for (int f = 0; f < 6; f++) {
 		for (int x = 0; x < numGrids; x++) {
 			for (int y = 0; y < numGrids; y++) {
+				int lod = startLod;
 				//Get centre node
 				int dX = MAX_VERTS;
 				int dY = MAX_VERTS;

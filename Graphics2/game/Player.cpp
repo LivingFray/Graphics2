@@ -258,6 +258,7 @@ void Player::setMaxSpeed(int speed) {
 	maxSpeed = speed;
 	if (this->speed > maxSpeed) {
 		this->speed = maxSpeed;
+		this->shipSpeed = speeds[maxSpeed];
 		speedometer->setEmission(speedImgs[maxSpeed]);
 	}
 }
