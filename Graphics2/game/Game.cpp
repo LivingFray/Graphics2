@@ -193,7 +193,6 @@ void Game::keyEvent(GLFWwindow* window, int key, int scancode, int action, int m
 }
 
 void Game::update(double dt) {
-	//TODO: Change strength of light depending on occlusion of planet
 	glm::vec3 oldPos = worldPos;
 	glm::quat oldRot = player->getShip()->getRotation();
 	player->update(dt);

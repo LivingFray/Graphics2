@@ -21,8 +21,6 @@ Mesh::Mesh() {
 	shininess = 0;
 }
 
-//TODO: Copy
-
 Mesh::~Mesh() {
 	glDeleteBuffers(1, &elementBuffer);
 	glDeleteBuffers(1, &vertexBuffer);

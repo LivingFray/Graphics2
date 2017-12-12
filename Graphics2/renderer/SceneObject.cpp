@@ -17,12 +17,10 @@ SceneObject::SceneObject() {
 }
 
 SceneObject::SceneObject(SceneObject& other) {
-	//TODO: Copy
 }
 
 
 SceneObject::~SceneObject() {
-	//TODO: Delete
 }
 
 bool SceneObject::setParent(Scene* obj) {

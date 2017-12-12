@@ -69,7 +69,6 @@ int main() {
 		t += dt;
 		if (t > 1.0) {
 			t -= 1.0;
-			//TODO: Display on screen with text
 			std::cout << "FPS: " << frames << std::endl;
 			frames = 0;
 		}

@@ -165,7 +165,7 @@ bool Octree::collides(Octree* other, glm::mat4 &trans, glm::mat4 &otherTrans, gl
 				//transTri[0] = glm::vec3(combTrans * glm::vec4(tri[0], 1.0f));
 				//transTri[1] = glm::vec3(combTrans * glm::vec4(tri[1], 1.0f));
 				//transTri[2] = glm::vec3(combTrans * glm::vec4(tri[2], 1.0f));
-				////Check for collision
+				//Check for collision
 				//if(containsTriangle(transTri, minX, maxX, minY, maxY, minZ, maxZ)) {
 					return true;
 				//}

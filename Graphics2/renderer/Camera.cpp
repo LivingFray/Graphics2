@@ -143,7 +143,6 @@ void Camera::render(GLuint target) {
 	int w, h;
 	glfwGetWindowSize(OpenGLSetup::window, &w, &h);
 	glViewport(0, 0, w, h);
-	//TODO: Experiment with multiple maps vs re rendering scene
 	if (clearOnDraw) {
 		glClearColor(0.0, 0.0, 0.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT);

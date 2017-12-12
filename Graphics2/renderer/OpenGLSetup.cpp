@@ -87,7 +87,6 @@ void OpenGLSetup::sharedInit() {
 }
 
 GLuint OpenGLSetup::loadImage(std::string filename) {
-	//TODO: Handling to allow for automatic deletion
 	if (textures[filename]) {
 		return textures[filename];
 	}
